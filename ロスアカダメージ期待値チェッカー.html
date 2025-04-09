@@ -9,8 +9,8 @@
       margin: 20px;
     }
     .container {
-      max-width: 800px;
-      margin: auto;
+      width: 100%;
+      padding: 20px;
     }
     fieldset {
       margin-bottom: 20px;
@@ -24,13 +24,15 @@
     }
     .slider-group label {
       display: inline-block;
-      width: 150px;
+      width: 200px;
     }
+
     input[type="range"] {
       vertical-align: middle;
-      width: 300px;
+      width: 100%;
       margin-right: 10px;
     }
+
     .value {
       font-weight: bold;
     }
@@ -55,6 +57,9 @@
       margin-right: 10px;
       padding: 5px 10px;
     }
+    input[type="number"] {
+      width: 60px;
+    }
   </style>
 </head>
 <body>
@@ -62,12 +67,12 @@
     <h1>ロスアカ 命中回避判定 ダメージ期待値計算ツール</h1>
     <div>
       <label>
-        <input type="checkbox" id="calcModeRealtime" checked>
+        <input type="checkbox" id="calcModeRealtime">
         リアルタイム計算モード
       </label>
       &nbsp;&nbsp;
       <label>
-        <input type="checkbox" id="enableBSResistance" checked>
+        <input type="checkbox" id="enableBSResistance">
         BS抵抗判定を有効にする
       </label>
     </div>
@@ -85,40 +90,63 @@
         <legend>能動側パラメータ</legend>
         <div class="slider-group">
           <input type="checkbox" id="group1_active_main_lock">
-          <label for="group1_active_main">主攻 (0～1500):</label>
-          <input type="range" id="group1_active_main" min="0" max="1500" step="10" value="570" oninput="updateValue('group1_active_main_val', this.value, 'group1')">
-          <span id="group1_active_main_val" class="value"></span>
+          <label for="group1_active_main">主攻:
+            <span id="group1_active_main_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_active_main_min" placeholder="下限" value="100">
+          ～
+          <input type="number" id="group1_active_main_max" placeholder="上限" value="1500">
+          <input type="range" id="group1_active_main" min="50" max="1500" step="10" value="500" oninput="updateValue('group1_active_main_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
           <input type="checkbox" id="group1_active_sub_lock">
-          <label for="group1_active_sub">副攻 (0～1500):</label>
-          <input type="range" id="group1_active_sub" min="0" max="1500" step="10" value="520" oninput="updateValue('group1_active_sub_val', this.value, 'group1')">
-          <span id="group1_active_sub_val" class="value"></span>
+          <label for="group1_active_sub">副攻:
+            <span id="group1_active_sub_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_active_sub_min" placeholder="下限" value="0">
+          ～
+          <input type="number" id="group1_active_sub_max" placeholder="上限" value="600">
+          <input type="range" id="group1_active_sub" min="50" max="600" step="10" value="50" oninput="updateValue('group1_active_sub_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
           <input type="checkbox" id="group1_active_hit_lock">
-          <label for="group1_active_hit">命中 (-150～150):</label>
-          <input type="range" id="group1_active_hit" min="-150" max="150" step="1" value="102" oninput="updateValue('group1_active_hit_val', this.value, 'group1')">
-          <span id="group1_active_hit_val" class="value"></span>
+          <label for="group1_active_hit">命中:
+            <span id="group1_active_hit_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_active_hit_min" placeholder="下限" value="-10">
+          ～
+          <input type="number" id="group1_active_hit_max" placeholder="上限" value="100">
+          <input type="range" id="group1_active_hit" min="-10" max="100" step="1" value="40" oninput="updateValue('group1_active_hit_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
-          <input type="checkbox" id="group1_active_ct_lock">
-          <label for="group1_active_ct">CT (-1～100):</label>
-          <input type="range" id="group1_active_ct" min="-1" max="100" step="1" value="16" oninput="updateValue('group1_active_ct_val', this.value, 'group1')">
-          <span id="group1_active_ct_val" class="value"></span>
+          <input type="checkbox" id="group1_active_ct_lock" checked>
+          <label for="group1_active_ct">CT:
+            <span id="group1_active_ct_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_active_ct_min" placeholder="下限" value="-1">
+          ～
+          <input type="number" id="group1_active_ct_max" placeholder="上限" value="100">
+          <input type="range" id="group1_active_ct" min="-1" max="100" step="1" value="5" oninput="updateValue('group1_active_ct_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
-          <input type="checkbox" id="group1_active_fb_lock">
-          <label for="group1_active_fb">FB (0～100):</label>
-          <input type="range" id="group1_active_fb" min="0" max="100" step="1" value="18" oninput="updateValue('group1_active_fb_val', this.value, 'group1')">
-          <span id="group1_active_fb_val" class="value"></span>
+          <input type="checkbox" id="group1_active_fb_lock" checked>
+          <label for="group1_active_fb">FB:
+            <span id="group1_active_fb_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_active_fb_min" placeholder="下限" value="0">
+          ～
+          <input type="number" id="group1_active_fb_max" placeholder="上限" value="100">
+          <input type="range" id="group1_active_fb" min="0" max="100" step="1" value="15" oninput="updateValue('group1_active_fb_val', this.value, 'group1')">
         </div>
-        <!-- 新規追加：堅実 -->
         <div class="slider-group">
-          <input type="checkbox" id="group1_active_kenjitsu_lock">
-          <label for="group1_active_kenjitsu">堅実 (0～100):</label>
+          <input type="checkbox" id="group1_active_kenjitsu_lock" checked>
+          <label for="group1_active_kenjitsu">堅実:
+            <span id="group1_active_kenjitsu_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_active_kenjitsu_min" placeholder="下限" value="0">
+          ～
+          <input type="number" id="group1_active_kenjitsu_max" placeholder="上限" value="100">
           <input type="range" id="group1_active_kenjitsu" min="0" max="100" step="1" value="0" oninput="updateValue('group1_active_kenjitsu_val', this.value, 'group1')">
-          <span id="group1_active_kenjitsu_val" class="value"></span>
         </div>
       </fieldset>
       
@@ -126,41 +154,67 @@
       <fieldset>
         <legend>受動側パラメータ</legend>
         <div class="slider-group">
-          <label for="group1_passive_avoid">回避 (-150～150):</label>
-          <input type="range" id="group1_passive_avoid" min="-150" max="150" step="1" value="0" oninput="updateValue('group1_passive_avoid_val', this.value, 'group1')">
-          <span id="group1_passive_avoid_val" class="value"></span>
+          <label for="group1_passive_avoid">回避:
+            <span id="group1_passive_avoid_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_passive_avoid_min" placeholder="下限" value="-20">
+          ～
+          <input type="number" id="group1_passive_avoid_max" placeholder="上限" value="100">
+          <input type="range" id="group1_passive_avoid" min="-20" max="100" step="1" value="10" oninput="updateValue('group1_passive_avoid_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
-          <label for="group1_passive_defense">防技 (-41～100):</label>
-          <input type="range" id="group1_passive_defense" min="-41" max="100" step="1" value="20" oninput="updateValue('group1_passive_defense_val', this.value, 'group1')">
-          <span id="group1_passive_defense_val" class="value"></span>
+          <label for="group1_passive_defense">防技:
+            <span id="group1_passive_defense_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_passive_defense_min" placeholder="下限" value="-41">
+          ～
+          <input type="number" id="group1_passive_defense_max" placeholder="上限" value="100">
+          <input type="range" id="group1_passive_defense" min="-41" max="100" step="1" value="50" oninput="updateValue('group1_passive_defense_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
-          <label for="group1_passive_resistance">抵抗 (-100～200):</label>
-          <input type="range" id="group1_passive_resistance" min="-100" max="200" step="1" value="20" oninput="updateValue('group1_passive_resistance_val', this.value, 'group1')">
-          <span id="group1_passive_resistance_val" class="value"></span>
+          <label for="group1_passive_resistance">抵抗:
+            <span id="group1_passive_resistance_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_passive_resistance_min" placeholder="下限" value="-25">
+          ～
+          <input type="number" id="group1_passive_resistance_max" placeholder="上限" value="100">
+          <input type="range" id="group1_passive_resistance" min="-25" max="100" step="1" value="20" oninput="updateValue('group1_passive_resistance_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
-          <label for="group1_passive_ct">CT (-1～100):</label>
-          <input type="range" id="group1_passive_ct" min="-1" max="100" step="1" value="5" oninput="updateValue('group1_passive_ct_val', this.value, 'group1')">
-          <span id="group1_passive_ct_val" class="value"></span>
+          <label for="group1_passive_ct">CT:
+            <span id="group1_passive_ct_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_passive_ct_min" placeholder="下限" value="-1">
+          ～
+          <input type="number" id="group1_passive_ct_max" placeholder="上限" value="100">
+          <input type="range" id="group1_passive_ct" min="-1" max="100" step="1" value="9" oninput="updateValue('group1_passive_ct_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
-          <label for="group1_passive_fb">FB (0～100):</label>
+          <label for="group1_passive_fb">FB:
+            <span id="group1_passive_fb_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_passive_fb_min" placeholder="下限" value="0">
+          ～
+          <input type="number" id="group1_passive_fb_max" placeholder="上限" value="100">
           <input type="range" id="group1_passive_fb" min="0" max="100" step="1" value="15" oninput="updateValue('group1_passive_fb_val', this.value, 'group1')">
-          <span id="group1_passive_fb_val" class="value"></span>
         </div>
-        <!-- 新規追加：巧妙 -->
         <div class="slider-group">
-          <label for="group1_passive_koumyou">巧妙 (0～100):</label>
+          <label for="group1_passive_koumyou">巧妙:
+            <span id="group1_passive_koumyou_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_passive_koumyou_min" placeholder="下限" value="0">
+          ～
+          <input type="number" id="group1_passive_koumyou_max" placeholder="上限" value="100">
           <input type="range" id="group1_passive_koumyou" min="0" max="100" step="1" value="0" oninput="updateValue('group1_passive_koumyou_val', this.value, 'group1')">
-          <span id="group1_passive_koumyou_val" class="value"></span>
         </div>
-        <!-- 新規追加：HP鎧 -->
         <div class="slider-group">
-          <label for="group1_passive_hparmor">HP鎧 (0～1000):</label>
-          <input type="range" id="group1_passive_hparmor" min="0" max="1000" step="1" value="0" oninput="updateValue('group1_passive_hparmor_val', this.value, 'group1')">
-          <span id="group1_passive_hparmor_val" class="value"></span>
+          <label for="group1_passive_hparmor">HP鎧:
+            <span id="group1_passive_hparmor_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_passive_hparmor_min" placeholder="下限" value="0">
+          ～
+          <input type="number" id="group1_passive_hparmor_max" placeholder="上限" value="200">
+          <input type="range" id="group1_passive_hparmor" min="0" max="200" step="1" value="0" oninput="updateValue('group1_passive_hparmor_val', this.value, 'group1')">
         </div>
       </fieldset>
       <div id="group1_result" class="group-result">ダメージ期待値: --</div>
@@ -175,35 +229,40 @@
       <fieldset>
         <legend>能動側パラメータ</legend>
         <div class="slider-group">
-          <label for="group2_active_main">主攻 (0～1500):</label>
-          <input type="range" id="group2_active_main" min="0" max="1500" step="10" value="500" oninput="updateValue('group2_active_main_val', this.value, 'group2')">
-          <span id="group2_active_main_val" class="value"></span>
+          <label for="group2_active_main">主攻:
+            <span id="group2_active_main_val" class="value"></span>
+          </label>
+          <input type="range" id="group2_active_main" min="50" max="1500" step="10" value="500" oninput="updateValue('group2_active_main_val', this.value, 'group2')">
         </div>
         <div class="slider-group">
-          <label for="group2_active_sub">副攻 (0～1500):</label>
-          <input type="range" id="group2_active_sub" min="0" max="1500" step="10" value="50" oninput="updateValue('group2_active_sub_val', this.value, 'group2')">
-          <span id="group2_active_sub_val" class="value"></span>
+          <label for="group2_active_sub">副攻:
+            <span id="group2_active_sub_val" class="value"></span>
+          </label>
+          <input type="range" id="group2_active_sub" min="50" max="600" step="10" value="50" oninput="updateValue('group2_active_sub_val', this.value, 'group2')">
         </div>
         <div class="slider-group">
-          <label for="group2_active_hit">命中 (-150～150):</label>
-          <input type="range" id="group2_active_hit" min="-150" max="150" step="1" value="25" oninput="updateValue('group2_active_hit_val', this.value, 'group2')">
-          <span id="group2_active_hit_val" class="value"></span>
+          <label for="group2_active_hit">命中:
+            <span id="group2_active_hit_val" class="value"></span>
+          </label>
+          <input type="range" id="group2_active_hit" min="-10" max="100" step="1" value="40" oninput="updateValue('group2_active_hit_val', this.value, 'group2')">
         </div>
         <div class="slider-group">
-          <label for="group2_active_ct">CT (-1～100):</label>
+          <label for="group2_active_ct">CT:
+            <span id="group2_active_ct_val" class="value"></span>
+          </label>
           <input type="range" id="group2_active_ct" min="-1" max="100" step="1" value="5" oninput="updateValue('group2_active_ct_val', this.value, 'group2')">
-          <span id="group2_active_ct_val" class="value"></span>
         </div>
         <div class="slider-group">
-          <label for="group2_active_fb">FB (0～100):</label>
+          <label for="group2_active_fb">FB:
+            <span id="group2_active_fb_val" class="value"></span>
+          </label>
           <input type="range" id="group2_active_fb" min="0" max="100" step="1" value="15" oninput="updateValue('group2_active_fb_val', this.value, 'group2')">
-          <span id="group2_active_fb_val" class="value"></span>
         </div>
-        <!-- 新規追加：堅実 -->
         <div class="slider-group">
-          <label for="group2_active_kenjitsu">堅実 (0～100):</label>
+          <label for="group2_active_kenjitsu">堅実:
+            <span id="group2_active_kenjitsu_val" class="value"></span>
+          </label>
           <input type="range" id="group2_active_kenjitsu" min="0" max="100" step="1" value="0" oninput="updateValue('group2_active_kenjitsu_val', this.value, 'group2')">
-          <span id="group2_active_kenjitsu_val" class="value"></span>
         </div>
       </fieldset>
       
@@ -211,41 +270,46 @@
       <fieldset>
         <legend>受動側パラメータ</legend>
         <div class="slider-group">
-          <label for="group2_passive_avoid">回避 (-150～150):</label>
-          <input type="range" id="group2_passive_avoid" min="-150" max="150" step="1" value="0" oninput="updateValue('group2_passive_avoid_val', this.value, 'group2')">
-          <span id="group2_passive_avoid_val" class="value"></span>
+          <label for="group2_passive_avoid">回避:
+            <span id="group2_passive_avoid_val" class="value"></span>
+          </label>
+          <input type="range" id="group2_passive_avoid" min="-20" max="100" step="1" value="10" oninput="updateValue('group2_passive_avoid_val', this.value, 'group2')">
         </div>
         <div class="slider-group">
-          <label for="group2_passive_defense">防技 (-41～100):</label>
-          <input type="range" id="group2_passive_defense" min="-41" max="100" step="1" value="20" oninput="updateValue('group2_passive_defense_val', this.value, 'group2')">
-          <span id="group2_passive_defense_val" class="value"></span>
+          <label for="group2_passive_defense">防技:
+            <span id="group2_passive_defense_val" class="value"></span>
+          </label>
+          <input type="range" id="group2_passive_defense" min="-41" max="100" step="1" value="50" oninput="updateValue('group2_passive_defense_val', this.value, 'group2')">
         </div>
         <div class="slider-group">
-          <label for="group2_passive_resistance">抵抗 (-100～200):</label>
-          <input type="range" id="group2_passive_resistance" min="-100" max="200" step="1" value="20" oninput="updateValue('group2_passive_resistance_val', this.value, 'group2')">
-          <span id="group2_passive_resistance_val" class="value"></span>
+          <label for="group2_passive_resistance">抵抗:
+            <span id="group2_passive_resistance_val" class="value"></span>
+          </label>
+          <input type="range" id="group2_passive_resistance" min="-25" max="100" step="1" value="20" oninput="updateValue('group2_passive_resistance_val', this.value, 'group2')">
         </div>
         <div class="slider-group">
-          <label for="group2_passive_ct">CT (-1～100):</label>
-          <input type="range" id="group2_passive_ct" min="-1" max="100" step="1" value="5" oninput="updateValue('group2_passive_ct_val', this.value, 'group2')">
-          <span id="group2_passive_ct_val" class="value"></span>
+          <label for="group2_passive_ct">CT:
+            <span id="group2_passive_ct_val" class="value"></span>
+          </label>
+          <input type="range" id="group2_passive_ct" min="-1" max="100" step="1" value="9" oninput="updateValue('group2_passive_ct_val', this.value, 'group2')">
         </div>
         <div class="slider-group">
-          <label for="group2_passive_fb">FB (0～100):</label>
+          <label for="group2_passive_fb">FB:
+            <span id="group2_passive_fb_val" class="value"></span>
+          </label>
           <input type="range" id="group2_passive_fb" min="0" max="100" step="1" value="15" oninput="updateValue('group2_passive_fb_val', this.value, 'group2')">
-          <span id="group2_passive_fb_val" class="value"></span>
         </div>
-        <!-- 新規追加：巧妙 -->
         <div class="slider-group">
-          <label for="group2_passive_koumyou">巧妙 (0～100):</label>
+          <label for="group2_passive_koumyou">巧妙:
+            <span id="group2_passive_koumyou_val" class="value"></span>
+          </label>
           <input type="range" id="group2_passive_koumyou" min="0" max="100" step="1" value="0" oninput="updateValue('group2_passive_koumyou_val', this.value, 'group2')">
-          <span id="group2_passive_koumyou_val" class="value"></span>
         </div>
-        <!-- 新規追加：HP鎧 -->
         <div class="slider-group">
-          <label for="group2_passive_hparmor">HP鎧 (0～1000):</label>
-          <input type="range" id="group2_passive_hparmor" min="0" max="1000" step="1" value="0" oninput="updateValue('group2_passive_hparmor_val', this.value, 'group2')">
-          <span id="group2_passive_hparmor_val" class="value"></span>
+          <label for="group2_passive_hparmor">HP鎧:
+            <span id="group2_passive_hparmor_val" class="value"></span>
+          </label>
+          <input type="range" id="group2_passive_hparmor" min="0" max="200" step="1" value="0" oninput="updateValue('group2_passive_hparmor_val', this.value, 'group2')">
         </div>
       </fieldset>
       <div id="group2_result" class="group-result">ダメージ期待値: --</div>
@@ -275,36 +339,6 @@
       [0,-40,0,0,-1],
       [0,0,-4,0,-1],
       [0,0,0,-1,-1],
-      // [40,40,-4,-1,0],
-      // [40,40,-4,0,1],
-      // [40,40,0,-1,1],
-      // [40,-40,4,-1,0],
-      // [40,-40,4,0,1],
-      // [40,0,4,-1,1],
-      // [40,-40,-4,1,0],
-      // [40,-40,0,1,1],
-      // [40,0,-4,1,1],
-      // [40,-40,-4,0,-1],
-      // [40,-40,0,-1,-1],
-      // [40,0,-4,-1,-1],
-      // [-40,40,4,-1,0],
-      // [-40,40,4,0,1],
-      // [0,40,4,-1,1],
-      // [-40,40,-4,1,0],
-      // [-40,40,0,1,1],
-      // [0,40,-4,1,1],
-      // [-40,40,-4,0,-1],
-      // [-40,40,0,-1,-1],
-      // [0,40,-4,-1,-1],
-      // [-40,-40,4,1,0],
-      // [-40,0,4,1,1],
-      // [0,-40,4,1,1],
-      // [-40,-40,4,0,-1],
-      // [-40,0,4,-1,-1],
-      // [0,-40,4,-1,-1],
-      // [-40,-40,0,1,-1],
-      // [-40,0,-4,1,-1],
-      // [0,-40,-4,1,-1],
     ];
 
     // 6パターンの変化量（[Δmain, Δsub, Δhit]）を定義
@@ -333,7 +367,6 @@
       const active_hit  = parseFloat(document.getElementById(groupId + "_active_hit").value);
       const active_ct   = parseFloat(document.getElementById(groupId + "_active_ct").value);
       const active_fb   = parseFloat(document.getElementById(groupId + "_active_fb").value);
-      // 新規追加：堅実
       const active_kenjitsu = parseFloat(document.getElementById(groupId + "_active_kenjitsu").value);
 
       const passive_avoid   = parseFloat(document.getElementById(groupId + "_passive_avoid").value);
@@ -341,17 +374,18 @@
       const passive_ct      = parseFloat(document.getElementById(groupId + "_passive_ct").value);
       const passive_fb      = parseFloat(document.getElementById(groupId + "_passive_fb").value);
       const passive_resistance = parseFloat(document.getElementById(groupId + "_passive_resistance").value);
-      // 新規追加：巧妙, HP鎧
       const passive_koumyou = parseFloat(document.getElementById(groupId + "_passive_koumyou").value);
       const passive_hparmor = parseFloat(document.getElementById(groupId + "_passive_hparmor").value);
 
       // カウンター初期化
-      let countMiss = 0, countGraze = 0, countLight = 0, countClean = 0, countHard = 0, countSmash = 0;
+      let countMiss = 0, countGraze = 0, countLight = 0, countClean = 0, countHard = 0, countSmash = 0, countCriticalLight = 0, countCriticalClean = 0, countCriticalHard = 0, countCriticalSmash = 0;
       let countBSChecks = 0, countBSSuccess = 0;
       let totalDamage = 0;
 
       // 四重ループ：d_a, d_d, d3, d4
+      // 命中ダイス
       for (let d_a = 1; d_a <= 100; d_a++) {
+        // 回避ダイス
         for (let d_d = 1; d_d <= 100; d_d++) {
           const attackerRoll = active_hit + d_a;
           const defenderRoll = passive_avoid + d_d;
@@ -381,6 +415,7 @@
 
           // ヒットの場合：内側ループ（d3：命中度判定、d4：防御技術判定）
           let sumDamageForD3 = 0;
+          // 命中度ダイス
           for (let d3 = 1; d3 <= 100; d3++) {
             // 命中度ダイスの補正：堅実の適用（最大値100）
             let correctedDie = d3 + active_kenjitsu;
@@ -402,73 +437,96 @@
               finalHitDegree = 50;
             }
 
-            let baseDamage = 0, trueDamage = 0, category = "";
+            let mainDamage = 0, subDamage = 0, trueDamage = 0, category = "";
             if (finalHitDegree <= 0) {
               category = "miss";
               countMiss++;
             } else if (finalHitDegree <= 49) {
               category = "graze";
               countGraze++;
-              baseDamage = Math.floor(active_main * ((15 + (correctedDie / 4)) / 100));
+              mainDamage = Math.floor(active_main * ((15 + (correctedDie / 4)) / 100));
             } else if (finalHitDegree <= 99) {
               category = "light";
               countLight++;
-              baseDamage = Math.floor(active_main * ((30 + (correctedDie / 2)) / 100));
+              if (isCritical) {
+                countCriticalLight++;
+              }
+              mainDamage = Math.floor(active_main * ((30 + (correctedDie / 2)) / 100));
             } else if (finalHitDegree <= 149) {
               category = "clean";
               countClean++;
-              baseDamage = isCritical ? (active_main) : (active_main + active_sub);
-              trueDamage = isCritical ? active_sub * 3 : 0;
+              if (isCritical) {
+                countCriticalClean++;
+              }
+              mainDamage = active_main;
+              subDamage = isCritical ? 0 : active_sub;
+              trueDamage = isCritical ? (active_sub * 2) : 0;
             } else if (finalHitDegree <= 199) {
               category = "hard";
               countHard++;
+              if (isCritical) {
+                countCriticalHard++;
+              }
               let multiplier = (100 + Math.floor(correctedDie / 2)) / 100;
-              baseDamage = Math.floor(active_main * multiplier);
-              trueDamage = Math.floor((isCritical ? active_sub * 3 : active_sub) * multiplier);
+              mainDamage = Math.floor(active_main * multiplier);
+              trueDamage = Math.floor((isCritical ? active_sub * 2 : active_sub) * multiplier);
 
             } else {
               category = "smash";
               countSmash++;
+              if (isCritical) {
+                countCriticalSmash++;
+              }
               let multiplier = (100 + correctedDie) / 100;
-              baseDamage = Math.floor(active_main * multiplier);
-              trueDamage = Math.floor((isCritical ? active_sub * 3 : active_sub) * multiplier);
+              mainDamage = Math.floor(active_main * multiplier);
+              trueDamage = Math.floor((isCritical ? active_sub * 2 : active_sub) * multiplier);
             }
 
-            // 防御技術判定（d4）ループ
-            let sumDamageAfterDefense = 0;
-            for (let d4 = 1; d4 <= 100; d4++) {
-              const defenseDie = d4;
-              const defenseTarget = 100 - passive_defense;
-              const defenseCrit = (defenseDie >= (100 - passive_ct));
-              const defenseSuccess = defenseCrit || (defenseDie >= defenseTarget);
-              let damageAfterDefense = baseDamage;
-              if (defenseSuccess) {
-                damageAfterDefense = baseDamage * 0.3;
+            // 防御技術判定（d4）ループ（回避ファンブルしていない場合 かつ 防技がマイナスでない場合）
+            if (!defenderFumble && passive_defense >= 0) {
+              let sumDamageAfterDefense = 0;
+              for (let d4 = 1; d4 <= 100; d4++) {
+                const defenseDie = d4;
+                const defenseTarget = 100 - passive_defense;
+                const defenseFumble = (defenseDie <= passive_fb);
+                const defenseCrit = (defenseDie >= (100 - passive_ct));
+                const defenseSuccess = !defenseFumble && (defenseCrit || (defenseDie >= defenseTarget));
+                let damageAfterDefense = mainDamage + subDamage;
+                if (defenseFumble) {
+                  damageAfterDefense = (mainDamage * 1.3) + subDamage;
+                } else if (defenseSuccess) {
+                  damageAfterDefense = (mainDamage + subDamage) * 0.3;
+                }
+                // 防技判定結果反映
+                damageAfterDefense = (damageAfterDefense + trueDamage);
+                // HP鎧の適用：クリーンヒット以上の場合のみ、最終HPダメージから軽減（0未満にならないように）
+                if (category === "clean" || category === "hard" || category === "smash") {
+                  damageAfterDefense = Math.max(0, damageAfterDefense - passive_hparmor);
+                }
+                sumDamageAfterDefense += damageAfterDefense;
               }
+              // 防技判定まで経由した平均ダメージ
+              let avgDamageAfterDefense = sumDamageAfterDefense / 100;
+              sumDamageForD3 += avgDamageAfterDefense;
+            } else {
               let extraMultiplier = 0;
               if (passive_defense < 0) {
                 const neg = -passive_defense;
-                if (neg >= 1 && neg <= 10) {
-                  extraMultiplier = 0.20;
-                } else if (neg >= 11 && neg <= 20) {
-                  extraMultiplier = 0.40;
-                } else if (neg >= 21 && neg <= 30) {
-                  extraMultiplier = 0.60;
-                } else if (neg >= 31 && neg <= 40) {
-                  extraMultiplier = 0.80;
-                } else if (neg >= 41) {
-                  extraMultiplier = 1.00;
-                }
+                if (neg >= 1 && neg <= 10) { extraMultiplier = 0.20; }
+                else if (neg >= 11 && neg <= 20) { extraMultiplier = 0.40; }
+                else if (neg >= 21 && neg <= 30) { extraMultiplier = 0.60; }
+                else if (neg >= 31 && neg <= 40) { extraMultiplier = 0.80; }
+                else if (neg >= 41) { extraMultiplier = 1.00; }
+              } 
+
+              // 防技マイナス時の追加ダメージ反映
+              let sumDamage = (mainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
+              // HP鎧の適用：クリーンヒット以上の場合のみ、最終HPダメージから軽減（0未満にならないように）
+              if (category === "clean" || category === "hard" || category === "smash") {
+                sumDamage = Math.max(0, sumDamage - passive_hparmor);
               }
-              damageAfterDefense = (damageAfterDefense + trueDamage) * (1 + extraMultiplier);
-              sumDamageAfterDefense += damageAfterDefense;
+              sumDamageForD3 += sumDamage;
             }
-            let avgDamageAfterDefense = sumDamageAfterDefense / 100;
-            // HP鎧の適用：クリーンヒット以上の場合のみ、最終HPダメージから軽減（0未満にならないように）
-            if (category === "clean" || category === "hard" || category === "smash") {
-              avgDamageAfterDefense = Math.max(0, avgDamageAfterDefense - passive_hparmor);
-            }
-            sumDamageForD3 += avgDamageAfterDefense;
 
             // BS抵抗判定シミュレーション（チェックオンかつ防御側回避判定でファンブルでない場合）
             if (document.getElementById("enableBSResistance").checked && !defenderFumble) {
@@ -479,24 +537,44 @@
                 bsBonus = 50;
               } else if (category === "light") {
                 bsBonus = 25;
+              } else if (category === "clean") {
+                bsBonus = 10;
               } else if (category === "hard") {
-                bsBonus = -25;
+                bsBonus = 0;
               } else if (category === "smash") {
-                bsBonus = -50;
+                bsBonus = -25;
               }
+              
               let bsResValue = passive_resistance + bsBonus;
-              let bsSuccessProb = 0;
+              let successCount = 0;
+
               if (bsResValue >= 0) {
-                let target = 100 - bsResValue;
-                if (target < 1) {
-                  bsSuccessProb = 1;
-                } else if (target > 100) {
-                  bsSuccessProb = 0;
-                } else {
-                  bsSuccessProb = (101 - target) / 100;
+                for (let bsRoll = 1; bsRoll <= 100; bsRoll++) {
+                  const bsCrit = bsRoll >= (100 - passive_ct);
+                  const bsFumble = bsRoll <= passive_fb;
+                  let bsSuccess = false;
+
+                  if (bsCrit) {
+                    bsSuccess = true;
+                  } else if (bsFumble) {
+                    bsSuccess = false;
+                  } else {
+                    if (bsResValue >= 0) {
+                      const target = 100 - bsResValue;
+                      bsSuccess = bsRoll >= target;
+                    } else {
+                      bsSuccess = false;
+                    }
+                  }
+
+                  if (bsSuccess) {
+                    successCount++;
+                  }
                 }
               }
-              countBSSuccess += bsSuccessProb;
+
+              // 成功率を期待値的に加算（100通り中の成功数）
+              countBSSuccess += (successCount / 100);
             }
           }
           // d3ループ分の平均を算出
@@ -513,6 +591,8 @@
       let pClean   = (countClean / totalOutcomes) * 100;
       let pHard    = (countHard / totalOutcomes) * 100;
       let pSmash   = (countSmash / totalOutcomes) * 100;
+      let pCleanOrHigher = pClean + pHard + pSmash;
+      let pCriticalCleanOrHigher = ((countCriticalClean + countCriticalHard + countCriticalSmash) / totalOutcomes) * 100;
       let pBSResist = (countBSChecks > 0 ? (countBSSuccess / countBSChecks) * 100 : 0);
       // 外側ループ（d_a,d_d）の各組み合わせごとに d3 の平均を取っているので、全体の平均は d_a×d_d=100×100で割る
       const expectedDamage = totalDamage / (100 * 100);
@@ -525,17 +605,35 @@
         "クリーンヒット率: " + pClean.toFixed(2) + "%<br>" +
         "ハードヒット率: " + pHard.toFixed(2) + "%<br>" +
         "スマッシュヒット率: " + pSmash.toFixed(2) + "%<br>" +
+        "クリーンヒット以上発生率: " + pCleanOrHigher.toFixed(2) + "%</br>" +
+        "クリティカルかつクリーンヒット以上発生率: " + pCriticalCleanOrHigher.toFixed(2) + "%</br>" +
         "BS抵抗率: " + pBSResist.toFixed(2) + "%";
-    }
 
+      document.getElementById(`${groupId}_active_main_val`).textContent = document.getElementById(`${groupId}_active_main`).value;
+      document.getElementById(`${groupId}_active_sub_val`).textContent = document.getElementById(`${groupId}_active_sub`).value;
+      document.getElementById(`${groupId}_active_hit_val`).textContent = document.getElementById(`${groupId}_active_hit`).value;
+      document.getElementById(`${groupId}_active_ct_val`).textContent = document.getElementById(`${groupId}_active_ct`).value;
+      document.getElementById(`${groupId}_active_fb_val`).textContent = document.getElementById(`${groupId}_active_fb`).value;
+      document.getElementById(`${groupId}_active_kenjitsu_val`).textContent = document.getElementById(`${groupId}_active_kenjitsu`).value;
+      document.getElementById(`${groupId}_passive_avoid_val`).textContent = document.getElementById(`${groupId}_passive_avoid`).value;
+      document.getElementById(`${groupId}_passive_defense_val`).textContent = document.getElementById(`${groupId}_passive_defense`).value;
+      document.getElementById(`${groupId}_passive_resistance_val`).textContent = document.getElementById(`${groupId}_passive_resistance`).value;
+      document.getElementById(`${groupId}_passive_ct_val`).textContent = document.getElementById(`${groupId}_passive_ct`).value;
+      document.getElementById(`${groupId}_passive_fb_val`).textContent = document.getElementById(`${groupId}_passive_fb`).value;
+      document.getElementById(`${groupId}_passive_koumyou_val`).textContent = document.getElementById(`${groupId}_passive_koumyou`).value;
+      document.getElementById(`${groupId}_passive_hparmor_val`).textContent = document.getElementById(`${groupId}_passive_hparmor`).value;
+
+      exportCalculationResults(groupId);
+    }
 
     // computeExpectedDamage：シミュレーション部分を関数化
     function computeExpectedDamage(active, passiveFull) {
-      const active_kenjitsu = parseFloat(document.getElementById("group1_active_kenjitsu").value);
-      let countMiss = 0, countGraze = 0, countLight = 0, countClean = 0, countHard = 0, countSmash = 0;
+      let countMiss = 0, countGraze = 0, countLight = 0, countClean = 0, countHard = 0, countSmash = 0, countCriticalLight = 0, countCriticalClean = 0, countCriticalHard = 0, countCriticalSmash = 0;
       let countBSChecks = 0, countBSSuccess = 0;
       let totalDamage = 0;
+      // 命中ダイス
       for (let d_a = 1; d_a <= 100; d_a++) {
+        // 回避ダイス
         for (let d_d = 1; d_d <= 100; d_d++) {
           const attackerRoll = active.hit + d_a;
           const defenderRoll = passiveFull.avoid + d_d;
@@ -551,8 +649,9 @@
           else { hit = (attackerRoll > defenderRoll); }
           if (!hit) { countMiss += 100; continue; }
           let sumDamageForD3 = 0;
+          // 命中度ダイス
           for (let d3 = 1; d3 <= 100; d3++) {
-            let correctedDie = d3 + active_kenjitsu;
+            let correctedDie = d3 + active.kenjitsu;
             if (correctedDie > 100) { correctedDie = 100; }
             const hitDegreeDie = d3;
             const hitDegreeBonus = attackerRoll - defenderRoll;
@@ -562,59 +661,84 @@
               if (finalHitDegree < 50) { finalHitDegree = 50; }
             }
             if (isCritical && finalHitDegree < 50) { finalHitDegree = 50; }
-            let baseDamage = 0, trueDamage = 0, category = "";
+            let mainDamage = 0, subDamage = 0, trueDamage = 0, category = "";
             if (finalHitDegree <= 0) { category = "miss"; countMiss++; }
             else if (finalHitDegree <= 49) {
               category = "graze"; countGraze++;
-              baseDamage = Math.floor(active.main * ((15 + (correctedDie / 4)) / 100));
+              mainDamage = Math.floor(active.main * ((15 + (correctedDie / 4)) / 100));
             } else if (finalHitDegree <= 99) {
               category = "light"; countLight++;
-              baseDamage = Math.floor(active.main * ((30 + (correctedDie / 2)) / 100));
+              if (isCritical) countCriticalLight++;
+              mainDamage = Math.floor(active.main * ((30 + (correctedDie / 2)) / 100));
             } else if (finalHitDegree <= 149) {
               category = "clean"; countClean++;
-              baseDamage = isCritical ? active.main : (active.main + active.sub);
-              trueDamage = isCritical ? (active.sub * 3) : 0;
+              if (isCritical) countCriticalClean++;
+              mainDamage = active.main;
+              subDamage = isCritical ? 0 : active.sub;
+              trueDamage = isCritical ? (active.sub * 2) : 0;
             } else if (finalHitDegree <= 199) {
               category = "hard"; countHard++;
+              if (isCritical) countCriticalHard++;
               let multiplier = (100 + Math.floor(correctedDie / 2)) / 100;
-              baseDamage = Math.floor(active.main * multiplier);
-              trueDamage = Math.floor((isCritical ? active.sub * 3 : active.sub) * multiplier);
+              mainDamage = Math.floor(active.main * multiplier);
+              trueDamage = Math.floor((isCritical ? active.sub * 2 : active.sub) * multiplier);
             } else {
               category = "smash"; countSmash++;
+              if (isCritical) countCriticalSmash++;
               let multiplier = (100 + correctedDie) / 100;
-              baseDamage = Math.floor(active.main * multiplier);
-              trueDamage = Math.floor((isCritical ? active.sub * 3 : active.sub) * multiplier);
+              mainDamage = Math.floor(active.main * multiplier);
+              trueDamage = Math.floor((isCritical ? active.sub * 2 : active.sub) * multiplier);
             }
             let sumDamageAfterDefense = 0;
-            for (let d4 = 1; d4 <= 100; d4++) {
-              const defenseDie = d4;
-              const defenseTarget = 100 - passiveFull.defense;
-              const defenseCrit = (d4 >= (100 - passiveFull.ct));
-              const defenseSuccess = defenseCrit || (d4 >= defenseTarget);
-              let damageAfterDefense = baseDamage;
-              if (defenseSuccess) { damageAfterDefense = baseDamage * 0.3; }
-              let extraMultiplier = 0;
-              if (passiveFull.defense < 0) {
-                const neg = -passiveFull.defense;
-                if (neg >= 1 && neg <= 10) { extraMultiplier = 0.20; }
-                else if (neg >= 11 && neg <= 20) { extraMultiplier = 0.40; }
-                else if (neg >= 21 && neg <= 30) { extraMultiplier = 0.60; }
-                else if (neg >= 31 && neg <= 40) { extraMultiplier = 0.80; }
-                else if (neg >= 41) { extraMultiplier = 1.00; }
+            // 回避ファンブルしていない場合 かつ 防技がマイナスでない場合
+            if (!defenderFumble && passiveFull.defense >= 0) {
+              // 防技ダイス
+              for (let d4 = 1; d4 <= 100; d4++) {
+                const defenseDie = d4;
+                const defenseTarget = 100 - passiveFull.defense;
+                const defenseFumble = (defenseDie <= passiveFull.fb);
+                const defenseCrit = (defenseDie >= (100 - passiveFull.ct));
+                const defenseSuccess = !defenseFumble && (defenseCrit || (defenseDie >= defenseTarget));
+                let damageAfterDefense = mainDamage + subDamage;
+                if (defenseFumble) {
+                  damageAfterDefense = (mainDamage * 1.3) + subDamage;
+                } else if (defenseSuccess) {
+                  damageAfterDefense = (mainDamage + subDamage) * 0.3;
+                }
+                // 防技判定結果反映
+                damageAfterDefense = (damageAfterDefense + trueDamage);
+                // HP鎧の処理
+                if (category === "clean" || category === "hard" || category === "smash") {
+                  damageAfterDefense = Math.max(0, damageAfterDefense - passiveFull.hparmor);
+                }
+                sumDamageAfterDefense += damageAfterDefense;
               }
-              damageAfterDefense = (damageAfterDefense + trueDamage) * (1 + extraMultiplier);
-              sumDamageAfterDefense += damageAfterDefense;
+              // 防技判定まで経由した平均ダメージ
+              let avgDamageAfterDefense = sumDamageAfterDefense / 100;
+              sumDamageForD3 += avgDamageAfterDefense;
+            } else {
+              let extraMultiplier = 0;
+              const neg = -passiveFull.defense;
+              if (neg >= 1 && neg <= 10) { extraMultiplier = 0.20; }
+              else if (neg >= 11 && neg <= 20) { extraMultiplier = 0.40; }
+              else if (neg >= 21 && neg <= 30) { extraMultiplier = 0.60; }
+              else if (neg >= 31 && neg <= 40) { extraMultiplier = 0.80; }
+              else if (neg >= 41) { extraMultiplier = 1.00; }
+              // 防技マイナス時の追加ダメージ反映
+              let sumDamage = (mainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
+              // HP鎧の処理
+              if (category === "clean" || category === "hard" || category === "smash") {
+                sumDamage = Math.max(0, sumDamage - passiveFull.hparmor);
+              }
+              sumDamageForD3 += sumDamage;
             }
-            let avgDamageAfterDefense = sumDamageAfterDefense / 100;
-            if (category === "clean" || category === "hard" || category === "smash") {
-              avgDamageAfterDefense = Math.max(0, avgDamageAfterDefense - passiveFull.hparmor);
-            }
-            sumDamageForD3 += avgDamageAfterDefense;
           }
+          // 命中度判定まで経由した平均ダメージ
           const avgDamageForOuterPair = sumDamageForD3 / 100;
           totalDamage += avgDamageForOuterPair;
         }
       }
+      // 命中回避判定の全パターンの平均ダメージ
       return totalDamage / (100 * 100);
     }
     
@@ -638,7 +762,8 @@
         sub:  parseFloat(document.getElementById("group1_active_sub").value),
         hit:  parseFloat(document.getElementById("group1_active_hit").value),
         ct:   parseFloat(document.getElementById("group1_active_ct").value),
-        fb:   parseFloat(document.getElementById("group1_active_fb").value)
+        fb:   parseFloat(document.getElementById("group1_active_fb").value),
+        kenjitsu: parseFloat(document.getElementById("group1_active_kenjitsu").value)
       };
     }
     
@@ -666,12 +791,27 @@
       // 初期状態をグループ1から取得
       let currentCandidate = getCurrentActiveStatus();
       let bestDamage = computeExpectedDamage(currentCandidate, passiveParams());
+      
+      // console.log(`${bestDamage}→`);
       // 探索履歴を管理する Set（JSON.stringify で文字列キー化）
       const evaluatedCandidates = new Set();
       evaluatedCandidates.add(JSON.stringify(currentCandidate));
 
       let iteration = 0;
       let noImprovementCount = 0;
+
+      
+      // 入力値の制限チェック
+      const minHit = parseInt(document.getElementById('group1_active_hit_min').value);
+      const maxHit = parseInt(document.getElementById('group1_active_hit_max').value);
+      const minMain = parseInt(document.getElementById('group1_active_main_min').value);
+      const maxMain = parseInt(document.getElementById('group1_active_main_max').value);
+      const minSub = parseInt(document.getElementById('group1_active_sub_min').value);
+      const maxSub = parseInt(document.getElementById('group1_active_sub_max').value);
+      const minCt = parseFloat(document.getElementById('group1_active_ct_min').value);
+      const maxCt = parseFloat(document.getElementById('group1_active_ct_max').value);
+      const minFb = parseFloat(document.getElementById('group1_active_fb_min').value);
+      const maxFb = parseFloat(document.getElementById('group1_active_fb_max').value);
 
       while (iteration < maxIterations && noImprovementCount < noImprovementLimit) {
         let localBestCandidate = null;
@@ -692,7 +832,8 @@
               sub:  currentCandidate.sub  + delta[1],
               hit:  currentCandidate.hit  + delta[2],
               ct:   currentCandidate.ct,
-              fb:   currentCandidate.fb
+              fb:   currentCandidate.fb,
+              kenjitsu:   currentCandidate.kenjitsu
             };
             const key = JSON.stringify(candidate);
             // すでに評価済みならスキップ
@@ -702,11 +843,14 @@
             let dmg = 0;
 
             // 範囲チェック（各スライダーの制約を確認）
-            if (candidate.hit < -150 || candidate.hit > 150 ||
-                candidate.main < 0 || candidate.main > 1500 ||
-                candidate.sub < 0 || candidate.sub > 1500 ||
-                candidate.ct < -1 || candidate.ct > 100 ||
-                candidate.fb < 0 || candidate.fb > 100) {
+            if (
+              candidate.hit < minHit || candidate.hit > maxHit ||
+              candidate.main < minMain || candidate.main > maxMain ||
+              candidate.sub < minSub || candidate.sub > maxSub ||
+              candidate.ct < minCt || candidate.ct > maxCt ||
+              candidate.fb < minFb || candidate.fb > maxFb
+            ) {
+              // 範囲外ならスキップ
             } else {
               dmg = computeExpectedDamage(candidate, passiveParams());
             }
@@ -733,7 +877,8 @@
               sub:  currentCandidate.sub  + delta[1],
               hit:  currentCandidate.hit  + delta[2],
               ct:   currentCandidate.ct   + delta[3],
-              fb:   currentCandidate.fb   + delta[4]
+              fb:   currentCandidate.fb   + delta[4],
+              kenjitsu:   currentCandidate.kenjitsu
             };
             const key = JSON.stringify(candidate);
             // すでに評価済みならスキップ
@@ -743,11 +888,14 @@
             let dmg = 0;
 
             // 範囲チェック（各スライダーの制約を確認）
-            if (candidate.hit < -150 || candidate.hit > 150 ||
-                candidate.main < 0 || candidate.main > 1500 ||
-                candidate.sub < 0 || candidate.sub > 1500 ||
-                candidate.ct < -1 || candidate.ct > 100 ||
-                candidate.fb < 0 || candidate.fb > 100) {
+            if (
+              candidate.hit < minHit || candidate.hit > maxHit ||
+              candidate.main < minMain || candidate.main > maxMain ||
+              candidate.sub < minSub || candidate.sub > maxSub ||
+              candidate.ct < minCt || candidate.ct > maxCt ||
+              candidate.fb < minFb || candidate.fb > maxFb
+            ) {
+              // 範囲外ならスキップ
             } else {
               dmg = computeExpectedDamage(candidate, passiveParams());
             }
@@ -769,7 +917,7 @@
         }
         iteration++;
       }
-      
+      // console.log(`${bestDamage}`);
       return currentCandidate;
     }
 
@@ -780,12 +928,76 @@
       document.getElementById(groupId + "_active_hit").value = candidate.hit;
       document.getElementById(groupId + "_active_ct").value = candidate.ct;
       document.getElementById(groupId + "_active_fb").value = candidate.fb;
+      document.getElementById(groupId + "_active_kenjitsu").value = candidate.kenjitsu;
       
       updateValue(groupId + "_active_main_val", candidate.main, groupId);
       updateValue(groupId + "_active_sub_val", candidate.sub, groupId);
       updateValue(groupId + "_active_hit_val", candidate.hit, groupId);
       updateValue(groupId + "_active_ct_val", candidate.ct, groupId);
       updateValue(groupId + "_active_fb_val", candidate.fb, groupId);
+      updateValue(groupId + "_active_kenjitsu_val", candidate.kenjitsu, groupId);
+    }
+
+    function exportCalculationResults(groupId) {
+      // グループのパラメータを取得
+      const parameters = {
+          active: {
+              main: parseFloat(document.getElementById(groupId + "_active_main").value),
+              sub: parseFloat(document.getElementById(groupId + "_active_sub").value),
+              hit: parseFloat(document.getElementById(groupId + "_active_hit").value),
+              ct: parseFloat(document.getElementById(groupId + "_active_ct").value),
+              fb: parseFloat(document.getElementById(groupId + "_active_fb").value),
+              kenjitsu: parseFloat(document.getElementById(groupId + "_active_kenjitsu").value)
+          },
+          passive: {
+              avoid: parseFloat(document.getElementById(groupId + "_passive_avoid").value),
+              defense: parseFloat(document.getElementById(groupId + "_passive_defense").value),
+              ct: parseFloat(document.getElementById(groupId + "_passive_ct").value),
+              fb: parseFloat(document.getElementById(groupId + "_passive_fb").value),
+              resistance: parseFloat(document.getElementById(groupId + "_passive_resistance").value),
+              koumyou: parseFloat(document.getElementById(groupId + "_passive_koumyou").value),
+              hparmor: parseFloat(document.getElementById(groupId + "_passive_hparmor").value)
+          }
+      };
+
+      // 計算結果を取得
+      const resultText = document.getElementById(groupId + "_result").innerText.split("\n");
+      const results = {};
+      resultText.forEach(line => {
+          const parts = line.split(": ");
+          if (parts.length === 2) {
+              const key = parts[0].trim();
+              const value = parts[1].trim();
+              results[key] = value;
+          }
+      });
+
+      // JSON データを作成
+      const jsonData = {
+          group: groupId,
+          parameters: parameters,
+          results: results
+      };
+
+      // console.log(jsonData.results['ダメージ期待値']);
+
+      // // JSON ファイルを生成してダウンロード
+      // const jsonString = JSON.stringify(jsonData, null, 2);
+      // const blob = new Blob([jsonString], { type: "application/json" });
+      // const a = document.createElement("a");
+      // a.href = URL.createObjectURL(blob);
+      // a.download = groupId + "_calculation_results.json";
+      // a.click();
+    }
+
+    // 「JSON 出力」ボタンを作成
+    function addExportButton(groupId) {
+        const button = document.createElement("button");
+        button.innerText = "JSON 出力";
+        button.onclick = function () {
+            exportCalculationResults(groupId);
+        };
+        document.getElementById(groupId).appendChild(button);
     }
 
     // 各グループのスライダー change イベント設定
@@ -833,37 +1045,57 @@
     // 「能動側最適化(シングル)」ボタン
     document.getElementById("singleOptimizeActiveButton").addEventListener("click", singleOptimizeActiveIterative);
 
-    updateValue('group1_active_main_val', document.getElementById("group1_active_main").value, 'group1');
-    updateValue('group1_active_sub_val', document.getElementById("group1_active_sub").value, 'group1');
-    updateValue('group1_active_hit_val', document.getElementById("group1_active_hit").value, 'group1');
-    updateValue('group1_active_ct_val', document.getElementById("group1_active_ct").value, 'group1');
-    updateValue('group1_active_fb_val', document.getElementById("group1_active_fb").value, 'group1');
-    updateValue('group1_active_kenjitsu_val', document.getElementById("group1_active_kenjitsu").value, 'group1');
-    updateValue('group1_passive_avoid_val', document.getElementById("group1_passive_avoid").value, 'group1');
-    updateValue('group1_passive_defense_val', document.getElementById("group1_passive_defense").value, 'group1');
-    updateValue('group1_passive_resistance_val', document.getElementById("group1_passive_resistance").value, 'group1');
-    updateValue('group1_passive_ct_val', document.getElementById("group1_passive_ct").value, 'group1');
-    updateValue('group1_passive_fb_val', document.getElementById("group1_passive_fb").value, 'group1');
-    updateValue('group1_passive_koumyou_val', document.getElementById("group1_passive_koumyou").value, 'group1');
-    updateValue('group1_passive_hparmor_val', document.getElementById("group1_passive_hparmor").value, 'group1');
-    
-    updateValue('group2_active_main_val', document.getElementById("group2_active_main").value, 'group2');
-    updateValue('group2_active_sub_val', document.getElementById("group2_active_sub").value, 'group2');
-    updateValue('group2_active_hit_val', document.getElementById("group2_active_hit").value, 'group2');
-    updateValue('group2_active_ct_val', document.getElementById("group2_active_ct").value, 'group2');
-    updateValue('group2_active_fb_val', document.getElementById("group2_active_fb").value, 'group2');
-    updateValue('group2_active_kenjitsu_val', document.getElementById("group2_active_kenjitsu").value, 'group2');
-    updateValue('group2_passive_avoid_val', document.getElementById("group2_passive_avoid").value, 'group2');
-    updateValue('group2_passive_defense_val', document.getElementById("group2_passive_defense").value, 'group2');
-    updateValue('group2_passive_resistance_val', document.getElementById("group2_passive_resistance").value, 'group2');
-    updateValue('group2_passive_ct_val', document.getElementById("group2_passive_ct").value, 'group2');
-    updateValue('group2_passive_fb_val', document.getElementById("group2_passive_fb").value, 'group2');
-    updateValue('group2_passive_koumyou_val', document.getElementById("group2_passive_koumyou").value, 'group2');
-    updateValue('group2_passive_hparmor_val', document.getElementById("group2_passive_hparmor").value, 'group2');
+    // スライダーの下限・上限をリアルタイムで他グループに反映する
+    const changeSlider = (index, sourceGroup) => {
+      const sourceMin = parseInt(document.getElementById(`${sourceGroup}_${index}_min`).value);
+      const sourceMax = parseInt(document.getElementById(`${sourceGroup}_${index}_max`).value);
+
+      if (isNaN(sourceMin) || isNaN(sourceMax) || sourceMin > sourceMax) return;
+
+      // group1, group2 両方に反映
+      ['group1', 'group2'].forEach(group => {
+        // min/maxのinput欄にも反映
+        // document.getElementById(`${group}_${index}_min`).value = sourceMin;
+        // document.getElementById(`${group}_${index}_max`).value = sourceMax;
+
+        // スライダーにも反映
+        const slider = document.getElementById(`${group}_${index}`);
+        slider.min = sourceMin;
+        slider.max = sourceMax;
+
+        // 現在のスライダー値が範囲外だった場合の補正（必要なら）
+        if (parseInt(slider.value) < sourceMin) slider.value = sourceMin;
+        if (parseInt(slider.value) > sourceMax) slider.value = sourceMax;
+      });
+    };
+
+    ['group1'].forEach(group => {
+      ['min', 'max'].forEach(suffix => {
+        document.getElementById(`${group}_active_main_${suffix}`).addEventListener('input', () => changeSlider(`active_main`, group));
+        document.getElementById(`${group}_active_sub_${suffix}`).addEventListener('input', () => changeSlider(`active_sub`, group));
+        document.getElementById(`${group}_active_hit_${suffix}`).addEventListener('input', () => changeSlider(`active_hit`, group));
+        document.getElementById(`${group}_active_ct_${suffix}`).addEventListener('input', () => changeSlider(`active_ct`, group));
+        document.getElementById(`${group}_active_fb_${suffix}`).addEventListener('input', () => changeSlider(`active_fb`, group));
+        document.getElementById(`${group}_active_kenjitsu_${suffix}`).addEventListener('input', () => changeSlider(`active_kenjitsu`, group));
+        document.getElementById(`${group}_passive_avoid_${suffix}`).addEventListener('input', () => changeSlider(`passive_avoid`, group));
+        document.getElementById(`${group}_passive_defense_${suffix}`).addEventListener('input', () => changeSlider(`passive_defense`, group));
+        document.getElementById(`${group}_passive_resistance_${suffix}`).addEventListener('input', () => changeSlider(`passive_resistance`, group));
+        document.getElementById(`${group}_passive_ct_${suffix}`).addEventListener('input', () => changeSlider(`passive_ct`, group));
+        document.getElementById(`${group}_passive_fb_${suffix}`).addEventListener('input', () => changeSlider(`passive_fb`, group));
+        document.getElementById(`${group}_passive_koumyou_${suffix}`).addEventListener('input', () => changeSlider(`passive_koumyou`, group));
+        document.getElementById(`${group}_passive_hparmor_${suffix}`).addEventListener('input', () => changeSlider(`passive_hparmor`, group));
+      });
+    });
 
     // 初期計算
     calculateGroup("group1");
     calculateGroup("group2");
+    
+    // 計算結果をJSON出力してダウンロードするボタン
+    // （コンソールログに出力する方式に変更したためコメントアウト）
+    // addExportButton("group1");
+    // addExportButton("group2");
+    
   </script>
 </body>
 </html>
