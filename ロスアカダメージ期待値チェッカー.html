@@ -126,7 +126,7 @@
           <input type="number" id="group1_active_ct_min" placeholder="下限" value="-1">
           ～
           <input type="number" id="group1_active_ct_max" placeholder="上限" value="100">
-          <input type="range" id="group1_active_ct" min="-1" max="100" step="1" value="5" oninput="updateValue('group1_active_ct_val', this.value, 'group1')">
+          <input type="range" id="group1_active_ct" min="-1" max="100" step="1" value="9" oninput="updateValue('group1_active_ct_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
           <input type="checkbox" id="group1_active_fb_lock" checked>
@@ -250,7 +250,7 @@
           <label for="group2_active_ct">CT:
             <span id="group2_active_ct_val" class="value"></span>
           </label>
-          <input type="range" id="group2_active_ct" min="-1" max="100" step="1" value="5" oninput="updateValue('group2_active_ct_val', this.value, 'group2')">
+          <input type="range" id="group2_active_ct" min="-1" max="100" step="1" value="9" oninput="updateValue('group2_active_ct_val', this.value, 'group2')">
         </div>
         <div class="slider-group">
           <label for="group2_active_fb">FB:
@@ -766,7 +766,6 @@
         kenjitsu: parseFloat(document.getElementById("group1_active_kenjitsu").value)
       };
     }
-    
 
     // 能動側最適化：複数回ループして最適な評価値配分を求め、ベストをグループ2に反映
     function optimizeActiveIterative() {
@@ -929,13 +928,17 @@
       document.getElementById(groupId + "_active_ct").value = candidate.ct;
       document.getElementById(groupId + "_active_fb").value = candidate.fb;
       document.getElementById(groupId + "_active_kenjitsu").value = candidate.kenjitsu;
-      
-      updateValue(groupId + "_active_main_val", candidate.main, groupId);
-      updateValue(groupId + "_active_sub_val", candidate.sub, groupId);
-      updateValue(groupId + "_active_hit_val", candidate.hit, groupId);
-      updateValue(groupId + "_active_ct_val", candidate.ct, groupId);
-      updateValue(groupId + "_active_fb_val", candidate.fb, groupId);
-      updateValue(groupId + "_active_kenjitsu_val", candidate.kenjitsu, groupId);
+
+      // 表示用のspanを手動で更新（updateValueは使わない）
+      document.getElementById(groupId + "_active_main_val").textContent = candidate.main;
+      document.getElementById(groupId + "_active_sub_val").textContent = candidate.sub;
+      document.getElementById(groupId + "_active_hit_val").textContent = candidate.hit;
+      document.getElementById(groupId + "_active_ct_val").textContent = candidate.ct;
+      document.getElementById(groupId + "_active_fb_val").textContent = candidate.fb;
+      document.getElementById(groupId + "_active_kenjitsu_val").textContent = candidate.kenjitsu;
+
+      // 計算は最後に1回だけ
+      calculateGroup(groupId);
     }
 
     function exportCalculationResults(groupId) {
@@ -1086,10 +1089,15 @@
         document.getElementById(`${group}_passive_hparmor_${suffix}`).addEventListener('input', () => changeSlider(`passive_hparmor`, group));
       });
     });
-
-    // 初期計算
-    calculateGroup("group1");
-    calculateGroup("group2");
+      
+    // ブラウザが値を反映し終わってから値を取得
+    window.addEventListener("load", function () {
+      setTimeout(() => {
+        // 初期計算
+        calculateGroup("group1");
+        calculateGroup("group2");
+      }, 0); // 必要に応じて遅延時間を100ms等に調整する
+    });
     
     // 計算結果をJSON出力してダウンロードするボタン
     // （コンソールログに出力する方式に変更したためコメントアウト）
