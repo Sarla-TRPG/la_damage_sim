@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>ロスアカ 命中回避判定 ダメージ期待値計算ツール - 比較モード</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -45,6 +46,7 @@
       margin-top: 20px;
       font-size: 18px;
       font-weight: bold;
+      width: 50%;
     }
     hr {
       margin: 40px 0;
@@ -59,6 +61,15 @@
     }
     input[type="number"] {
       width: 60px;
+    }
+    .group-wrapper {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .hitRateChart {
+        width: 300px !important;  /* Chart.jsが上書きしてくるので念のため */
+        height: 300px !important;
     }
   </style>
 </head>
@@ -243,7 +254,10 @@
           <input type="range" id="group1_passive_hparmor" min="0" max="200" step="1" value="0" oninput="updateValue('group1_passive_hparmor_val', this.value, 'group1')">
         </div>
       </fieldset>
-      <div id="group1_result" class="group-result">ダメージ期待値: --</div>
+      <div class="group-wrapper">
+        <div id="group1_result" class="group-result">ダメージ期待値: --</div>
+        <canvas id="group1_hitRateChart" class="hitRateChart"></canvas>
+      </div>
     </div>
     
     <hr>
@@ -343,8 +357,11 @@
           </label>
           <input type="range" id="group2_passive_hparmor" min="0" max="200" step="1" value="0" oninput="updateValue('group2_passive_hparmor_val', this.value, 'group2')">
         </div>
-      </fieldset>
-      <div id="group2_result" class="group-result">ダメージ期待値: --</div>
+      </fieldset>      
+      <div class="group-wrapper">
+        <div id="group2_result" class="group-result">ダメージ期待値: --</div>
+        <canvas id="group2_hitRateChart" class="hitRateChart"></canvas>
+      </div>
     </div>
   </div>
 
@@ -774,6 +791,9 @@
         "クリーンヒット以上発生率: " + pCleanOrHigher.toFixed(2) + "%</br>" +
         "クリティカルかつクリーンヒット以上発生率: " + pCriticalCleanOrHigher.toFixed(2) + "%</br>" +
         "BS抵抗率: " + pBSResist.toFixed(2) + "%";
+
+      // グラフ描画
+      drawHitRateChart(groupId, pMiss, pGraze, pLight, pClean, pHard, pSmash);
 
       document.getElementById(`${groupId}_active_main_val`).textContent = document.getElementById(`${groupId}_active_main`).value;
       document.getElementById(`${groupId}_active_sub_val`).textContent = document.getElementById(`${groupId}_active_sub`).value;
@@ -1575,6 +1595,72 @@
     // addExportButton("group1");
     // addExportButton("group2");
     
+  </script>
+  <script>
+    // グローバルにインスタンスをグループ別に保存するオブジェクトを作る
+    window.hitRateChartInstances = window.hitRateChartInstances || {};
+
+    function drawHitRateChart(group, pMiss, pGraze, pLight, pClean, pHard, pSmash) {
+        const data = {
+            labels: ["回避", "グレイズ", "ライト", "クリーン", "ハード", "スマッシュ"],
+            datasets: [{
+                label: "内訳",
+                data: [pMiss, pGraze, pLight, pClean, pHard, pSmash],
+                // backgroundColor: "rgba(135, 206, 250, 0.6)", // 視認性アップ
+                borderWidth: 1,
+                categoryPercentage: 0.8, // 各カテゴリの領域に占める割合
+                barPercentage: 0.6 // バー自体の幅
+            }]
+        };
+
+        const config = {
+          type: 'pie',
+          data: data,
+          options: {
+            animation: false,
+            responsive: false,
+            maintainAspectRatio: false,
+          }
+        }
+
+        // const config = {
+        //     type: 'bar',
+        //     data: data,
+        //     options: {
+        //         indexAxis: 'y',
+        //         responsive: true,
+        //         maintainAspectRatio: false,
+        //         layout: {
+        //             padding: 10 // グラフ内部の余白
+        //         },
+        //         scales: {
+        //             x: {
+        //                 beginAtZero: true,
+        //                 max: 100,
+        //                 ticks: {
+        //                     callback: (val) => `${val}%`
+        //                 }
+        //             },
+        //             y: {
+        //                 ticks: {
+        //                     font: {
+        //                         size: 14
+        //                     }
+        //                 }
+        //             }
+        //         },
+        //         plugins: {
+        //             legend: { display: false }
+        //         }
+        //     }
+        // };
+
+        const ctx = document.getElementById(`${group}_hitRateChart`).getContext("2d");
+        if (window.hitRateChartInstances[`${group}_hitRateChart`]) {
+            window.hitRateChartInstances[`${group}_hitRateChart`].destroy();
+        }
+        window.hitRateChartInstances[`${group}_hitRateChart`] = new Chart(ctx, config);
+    }
   </script>
 </body>
 </html>
