@@ -659,7 +659,6 @@
               sumDamageForD3 += avgDamageAfterDefense;
             } else {
 
-              // TODO:2025/04/10時点で未実装の要素 回避判定FBや防技マイナスの場合も主攻ダメ1.3倍の防技判定FBチェックだけ行う
               let defenseCheckedMainDamage = mainDamage;
               let extraMultiplier = 0;
               const neg = -passive_defense;
@@ -668,25 +667,30 @@
               else if (neg >= 21 && neg <= 30) { extraMultiplier = 0.60; }
               else if (neg >= 31 && neg <= 40) { extraMultiplier = 0.80; }
               else if (neg >= 41) { extraMultiplier = 1.00; }
+              
+              // TODO:2025/04/10時点で未実装の要素 回避判定FBや防技マイナスの場合も主攻ダメ1.3倍の防技判定FBチェックだけ行う
+              // for (let d4 = 1; d4 <= 100; d4++) {
+              //   const defenseDie = d4;
+              //   const defenseTarget = 100 - passive_defense;
+              //   const defenseFumble = (defenseDie <= passive_fb);
+              //   if (defenseFumble) {
+              //     defenseCheckedMainDamage = (mainDamage * 1.3);
+              //   }
+              //   // 防技マイナス時の追加ダメージ反映
+              //   let damageAfterDefenseCheck = (defenseCheckedMainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
+              //   // HP鎧の適用：クリーンヒット以上の場合のみ、最終HPダメージから軽減（0未満にならないように）
+              //   if (category === "clean" || category === "hard" || category === "smash") {
+              //     damageAfterDefenseCheck = Math.max(0, damageAfterDefenseCheck - passive_hparmor);
+              //   }
+              //   sumDamageAfterDefense += damageAfterDefenseCheck;
+              // }
+              // // 防技判定まで経由した平均ダメージ
+              // let avgDamageAfterDefense = sumDamageAfterDefense / 100;
+              // sumDamageForD3 += avgDamageAfterDefense;
 
-              for (let d4 = 1; d4 <= 100; d4++) {
-                const defenseDie = d4;
-                const defenseTarget = 100 - passive_defense;
-                const defenseFumble = (defenseDie <= passive_fb);
-                if (defenseFumble) {
-                  defenseCheckedMainDamage = (mainDamage * 1.3);
-                }
-                // 防技マイナス時の追加ダメージ反映
-                let damageAfterDefenseCheck = (defenseCheckedMainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
-                // HP鎧の適用：クリーンヒット以上の場合のみ、最終HPダメージから軽減（0未満にならないように）
-                if (category === "clean" || category === "hard" || category === "smash") {
-                  damageAfterDefenseCheck = Math.max(0, damageAfterDefenseCheck - passive_hparmor);
-                }
-                sumDamageAfterDefense += damageAfterDefenseCheck;
-              }
-              // 防技判定まで経由した平均ダメージ
-              let avgDamageAfterDefense = sumDamageAfterDefense / 100;
-              sumDamageForD3 += avgDamageAfterDefense;
+              // 2025/04/10時点の仕様
+              sumDamageForD3 += (defenseCheckedMainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
+
             }
 
             // BS抵抗判定シミュレーション（チェックオンかつ防御側回避判定でファンブルでない場合）
@@ -863,7 +867,6 @@
               sumDamageForD3 += avgDamageAfterDefense;
             } else {
 
-              // TODO:2025/04/10時点で未実装の要素 回避判定FBや防技マイナスの場合も主攻ダメ1.3倍の防技判定FBチェックだけ行う
               let defenseCheckedMainDamage = mainDamage;
               let extraMultiplier = 0;
               const neg = -passiveFull.defense;
@@ -873,27 +876,28 @@
               else if (neg >= 31 && neg <= 40) { extraMultiplier = 0.80; }
               else if (neg >= 41) { extraMultiplier = 1.00; }
 
-              for (let d4 = 1; d4 <= 100; d4++) {
-                const defenseDie = d4;
-                const defenseTarget = 100 - passiveFull.defense;
-                const defenseFumble = (defenseDie <= passiveFull.fb);
-                if (defenseFumble) {
-                  defenseCheckedMainDamage = (mainDamage * 1.3);
-                }
-                // 防技判定結果反映
-                let damageAfterDefenseCheck = (defenseCheckedMainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
-                // HP鎧の処理
-                if (category === "clean" || category === "hard" || category === "smash") {
-                  damageAfterDefenseCheck = Math.max(0, damageAfterDefenseCheck - passiveFull.hparmor);
-                }
-                sumDamageAfterDefense += damageAfterDefenseCheck;
-              }
-              // 防技判定まで経由した平均ダメージ
-              let avgDamageAfterDefense = sumDamageAfterDefense / 100;
-              sumDamageForD3 += avgDamageAfterDefense;
+              // TODO:2025/04/10時点で未実装の要素 回避判定FBや防技マイナスの場合も主攻ダメ1.3倍の防技判定FBチェックだけ行う
+              // for (let d4 = 1; d4 <= 100; d4++) {
+              //   const defenseDie = d4;
+              //   const defenseTarget = 100 - passiveFull.defense;
+              //   const defenseFumble = (defenseDie <= passiveFull.fb);
+              //   if (defenseFumble) {
+              //     defenseCheckedMainDamage = (mainDamage * 1.3);
+              //   }
+              //   // 防技判定結果反映
+              //   let damageAfterDefenseCheck = (defenseCheckedMainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
+              //   // HP鎧の処理
+              //   if (category === "clean" || category === "hard" || category === "smash") {
+              //     damageAfterDefenseCheck = Math.max(0, damageAfterDefenseCheck - passiveFull.hparmor);
+              //   }
+              //   sumDamageAfterDefense += damageAfterDefenseCheck;
+              // }
+              // // 防技判定まで経由した平均ダメージ
+              // let avgDamageAfterDefense = sumDamageAfterDefense / 100;
+              // sumDamageForD3 += avgDamageAfterDefense;
               
               // 2025/04/10時点の仕様
-              // sumDamageForD3 += (defenseCheckedMainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
+              sumDamageForD3 += (defenseCheckedMainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
             }
           }
           // 命中度判定まで経由した平均ダメージ
