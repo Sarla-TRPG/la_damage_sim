@@ -67,7 +67,7 @@
     <h1>ロスアカ 命中回避判定 ダメージ期待値計算ツール</h1>
     <div>
       <label>
-        <input type="checkbox" id="calcModeRealtime">
+        <input type="checkbox" id="calcModeRealtime" checked>
         リアルタイム計算モード
       </label>
       &nbsp;&nbsp;
@@ -558,12 +558,26 @@
             totalDamage += cacheResult.avgDamageForOuterPair;
             countBSChecks += cacheResult.d3CountBSChecks;
             countBSSuccess += cacheResult.d3CountBSSuccess;
+
+            countMiss += cacheResult.d3CountMiss;
+            countGraze += cacheResult.d3CountGraze;
+            countLight += cacheResult.d3CountLight;
+            countClean += cacheResult.d3CountClean;
+            countHard += cacheResult.d3CountHard;
+            countSmash += cacheResult.d3CountSmash;
+            countCriticalLight += cacheResult.d3CountCriticalLight;
+            countCriticalClean += cacheResult.d3CountCriticalClean;
+            countCriticalHard += cacheResult.d3CountCriticalHard;
+            countCriticalSmash += cacheResult.d3CountCriticalSmash;
+
             // 次のループに進む
             continue;
           }
           // ヒットの場合：内側ループ（d3：命中度判定、d4：防御技術判定）
           let sumDamageForD3 = 0;
           let d3CountBSChecks = 0, d3CountBSSuccess = 0;
+          let d3CountMiss = 0, d3CountGraze = 0, d3CountLight = 0, d3CountClean = 0, d3CountHard = 0, d3CountSmash = 0;
+          let d3CountCriticalLight = 0, d3CountCriticalClean = 0, d3CountCriticalHard = 0, d3CountCriticalSmash = 0;
           // 命中度ダイス
           for (let d3 = 1; d3 <= 100; d3++) {
             // 命中度ダイスの補正：堅実の適用（最大値100）
@@ -589,32 +603,32 @@
             let mainDamage = 0, subDamage = 0, trueDamage = 0, category = "";
             if (finalHitDegree <= 0) {
               category = "miss";
-              countMiss++;
+              d3CountMiss++;
             } else if (finalHitDegree <= 49) {
               category = "graze";
-              countGraze++;
+              d3CountGraze++;
               mainDamage = Math.floor(active_main * ((15 + (correctedDie / 4)) / 100));
             } else if (finalHitDegree <= 99) {
               category = "light";
-              countLight++;
+              d3CountLight++;
               if (isCritical) {
-                countCriticalLight++;
+                d3CountCriticalLight++;
               }
               mainDamage = Math.floor(active_main * ((30 + (correctedDie / 2)) / 100));
             } else if (finalHitDegree <= 149) {
               category = "clean";
-              countClean++;
+              d3CountClean++;
               if (isCritical) {
-                countCriticalClean++;
+                d3CountCriticalClean++;
               }
               mainDamage = active_main;
               subDamage = isCritical ? 0 : active_sub;
               trueDamage = isCritical ? (active_sub * 2) : 0;
             } else if (finalHitDegree <= 199) {
               category = "hard";
-              countHard++;
+              d3CountHard++;
               if (isCritical) {
-                countCriticalHard++;
+                d3CountCriticalHard++;
               }
               let multiplier = (100 + Math.floor(correctedDie / 2)) / 100;
               mainDamage = Math.floor(active_main * multiplier);
@@ -622,9 +636,9 @@
 
             } else {
               category = "smash";
-              countSmash++;
+              d3CountSmash++;
               if (isCritical) {
-                countCriticalSmash++;
+                d3CountCriticalSmash++;
               }
               let multiplier = (100 + correctedDie) / 100;
               mainDamage = Math.floor(active_main * multiplier);
@@ -706,8 +720,32 @@
           totalDamage += avgDamageForOuterPair;
           countBSChecks += d3CountBSChecks;
           countBSSuccess += d3CountBSSuccess;
+          countMiss += d3CountMiss;
+          countGraze += d3CountGraze;
+          countLight += d3CountLight;
+          countClean += d3CountClean;
+          countHard += d3CountHard;
+          countSmash += d3CountSmash;
+          countCriticalLight += d3CountCriticalLight;
+          countCriticalClean += d3CountCriticalClean;
+          countCriticalHard += d3CountCriticalHard;
+          countCriticalSmash += d3CountCriticalSmash;
           
-          damageCache.set(cacheKey, {avgDamageForOuterPair, d3CountBSChecks, d3CountBSSuccess});
+          damageCache.set(cacheKey, {
+            avgDamageForOuterPair,
+            d3CountBSChecks,
+            d3CountBSSuccess,
+            d3CountMiss,
+            d3CountGraze,
+            d3CountLight,
+            d3CountClean,
+            d3CountHard,
+            d3CountSmash,
+            d3CountCriticalLight,
+            d3CountCriticalClean,
+            d3CountCriticalHard,
+            d3CountCriticalSmash
+          });
         }
       }
 
