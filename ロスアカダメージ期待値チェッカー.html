@@ -550,7 +550,7 @@
           let hit = false, isCritical = false;
           if (attackerFumble) {
             hit = false;
-          } else if (defenderCritical) {
+          } else if (!defenderFumble && defenderCritical) {
             hit = false;
           } else if (attackerCritical) {
             hit = true;
@@ -839,7 +839,7 @@
           const defenderCritical = (d_d >= (100 - passiveFull.ct));
           let hit = false, isCritical = false;
           if (attackerFumble) { hit = false; }
-          else if (defenderCritical) { hit = false; }
+          else if (!defenderFumble && defenderCritical) { hit = false; }
           else if (attackerCritical) { hit = true; isCritical = true; }
           else if (defenderFumble) { hit = true; }
           else { hit = (attackerRoll > defenderRoll); }
