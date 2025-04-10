@@ -687,15 +687,24 @@
       let countMiss = 0, countGraze = 0, countLight = 0, countClean = 0, countHard = 0, countSmash = 0, countCriticalLight = 0, countCriticalClean = 0, countCriticalHard = 0, countCriticalSmash = 0;
       let countBSChecks = 0, countBSSuccess = 0;
       let totalDamage = 0;
+      
+      const damageCache = new Map();
+
       // 命中ダイス
       for (let d_a = 1; d_a <= 100; d_a++) {
+        // 命中判定のダイスがFB値以下なら自動失敗
+        // この時は回避判定、命中度判定の1d100×1d100の10000通りのループ（d2ループ×d3ループ）をすべて完全回避した扱いでカウント
+        if (d_a <= active.fb) {
+          countMiss += 10000; // 内側ループ d2×d3
+          continue;
+        }
+        const attackerRoll = active.hit + d_a;
+        const attackerFumble = (d_a <= active.fb);
+        const attackerCritical = (d_a >= (100 - active.ct));
         // 回避ダイス
         for (let d_d = 1; d_d <= 100; d_d++) {
-          const attackerRoll = active.hit + d_a;
           const defenderRoll = passiveFull.avoid + d_d;
-          const attackerFumble = (d_a <= active.fb);
           const defenderFumble = (d_d <= passiveFull.fb);
-          const attackerCritical = (d_a >= (100 - active.ct));
           const defenderCritical = (d_d >= (100 - passiveFull.ct));
           let hit = false, isCritical = false;
           if (attackerFumble) { hit = false; }
@@ -704,6 +713,17 @@
           else if (defenderFumble) { hit = true; }
           else { hit = (attackerRoll > defenderRoll); }
           if (!hit) { countMiss += 100; continue; }
+
+          // 命中度差、堅実値、クリティカルヒット、防技の値をキーにd3ループ以内の判定結果をキャッシュから取得する
+          const cacheKey = `${attackerRoll - defenderRoll}_${active.kenjitsu}_${isCritical}_${passiveFull.defense}`;
+          const cacheResult = getDamageFromCache(damageCache, cacheKey);
+          if (cacheResult !== null) {
+            // cacheResultに格納されたavgDamageForOuterPairを使用する
+            totalDamage += cacheResult.avgDamageForOuterPair;
+            // 次のループに進む
+            continue;
+          }
+
           let sumDamageForD3 = 0;
           // 命中度ダイス
           for (let d3 = 1; d3 <= 100; d3++) {
@@ -807,6 +827,7 @@
           // 命中度判定まで経由した平均ダメージ
           const avgDamageForOuterPair = sumDamageForD3 / 100;
           totalDamage += avgDamageForOuterPair;
+          damageCache.set(cacheKey, {avgDamageForOuterPair});
         }
       }
       // 命中回避判定の全パターンの平均ダメージ
