@@ -78,8 +78,15 @@
     </div>
     <!-- 「能動側最適化」ボタンを追加 -->
     <div class="optimize-buttons">
-      <button id="optimizeActiveButton">能動側最適化</button>
-      <button id="singleOptimizeActiveButton">能動側最適化(シングル)</button>
+      <button id="optimizeActiveButton">能動側最適化(実数)</button>
+      <button id="singleOptimizeActiveButton">能動側最適化(実数)(シングル)</button>
+      <button id="optimizePassiveButton">受動側最適化(実数)</button>
+      <button id="singleOptimizePassiveButton">受動側最適化(実数)(シングル)</button>
+      <br>
+      <button id="optimizeActiveHPRatioButton">能動側最適化(HP比)</button>
+      <button id="singleOptimizeActiveHPRatioButton">能動側最適化(HP比)(シングル)</button>
+      <button id="optimizePassiveHPRatioButton">受動側最適化(HP比)</button>
+      <button id="singleOptimizePassiveHPRatioButton">受動側最適化(HP比)(シングル)</button>
     </div>
     
     <!-- グループ1 -->
@@ -154,6 +161,17 @@
       <fieldset>
         <legend>受動側パラメータ</legend>
         <div class="slider-group">
+          <input type="checkbox" id="group1_passive_hp_lock">
+          <label for="group1_passive_hp">HP:
+            <span id="group1_passive_hp_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_passive_hp_min" placeholder="下限" value="3000">
+          ～
+          <input type="number" id="group1_passive_hp_max" placeholder="上限" value="15000">
+          <input type="range" id="group1_passive_hp" min="3000" max="15000" step="100" value="6000" oninput="updateValue('group1_passive_hp_val', this.value, 'group1')">
+        </div>
+        <div class="slider-group">
+          <input type="checkbox" id="group1_passive_avoid_lock">
           <label for="group1_passive_avoid">回避:
             <span id="group1_passive_avoid_val" class="value"></span>
           </label>
@@ -163,6 +181,7 @@
           <input type="range" id="group1_passive_avoid" min="-20" max="100" step="1" value="10" oninput="updateValue('group1_passive_avoid_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
+          <input type="checkbox" id="group1_passive_defense_lock">
           <label for="group1_passive_defense">防技:
             <span id="group1_passive_defense_val" class="value"></span>
           </label>
@@ -172,6 +191,7 @@
           <input type="range" id="group1_passive_defense" min="-41" max="100" step="1" value="50" oninput="updateValue('group1_passive_defense_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
+          <input type="checkbox" id="group1_passive_resistance_lock" checked>
           <label for="group1_passive_resistance">抵抗:
             <span id="group1_passive_resistance_val" class="value"></span>
           </label>
@@ -181,6 +201,7 @@
           <input type="range" id="group1_passive_resistance" min="-25" max="100" step="1" value="20" oninput="updateValue('group1_passive_resistance_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
+          <input type="checkbox" id="group1_passive_ct_lock" checked>
           <label for="group1_passive_ct">CT:
             <span id="group1_passive_ct_val" class="value"></span>
           </label>
@@ -190,6 +211,7 @@
           <input type="range" id="group1_passive_ct" min="-1" max="100" step="1" value="9" oninput="updateValue('group1_passive_ct_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
+          <input type="checkbox" id="group1_passive_fb_lock" checked>
           <label for="group1_passive_fb">FB:
             <span id="group1_passive_fb_val" class="value"></span>
           </label>
@@ -199,6 +221,7 @@
           <input type="range" id="group1_passive_fb" min="0" max="100" step="1" value="15" oninput="updateValue('group1_passive_fb_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
+          <input type="checkbox" id="group1_passive_koumyou_lock" checked>
           <label for="group1_passive_koumyou">巧妙:
             <span id="group1_passive_koumyou_val" class="value"></span>
           </label>
@@ -208,6 +231,7 @@
           <input type="range" id="group1_passive_koumyou" min="0" max="100" step="1" value="0" oninput="updateValue('group1_passive_koumyou_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
+          <input type="checkbox" id="group1_passive_hparmor_lock" checked>
           <label for="group1_passive_hparmor">HP鎧:
             <span id="group1_passive_hparmor_val" class="value"></span>
           </label>
@@ -270,6 +294,12 @@
       <fieldset>
         <legend>受動側パラメータ</legend>
         <div class="slider-group">
+          <label for="group2_passive_hp">HP:
+            <span id="group2_passive_hp_val" class="value"></span>
+          </label>
+          <input type="range" id="group2_passive_hp" min="3000" max="15000" step="100" value="6000" oninput="updateValue('group2_passive_hp_val', this.value, 'group2')">
+        </div>
+        <div class="slider-group">
           <label for="group2_passive_avoid">回避:
             <span id="group2_passive_avoid_val" class="value"></span>
           </label>
@@ -317,8 +347,43 @@
   </div>
 
   <script>
+    // 20パターンの変化量（[Δhp, Δavoid, Δdefense, Δct, Δfb]）を定義
+    const passivePatternList = [
+      [400,-4,0,0,0],
+      [400,0,-8,0,0],
+      [400,0,0,-1,0],
+      [400,0,0,0,1],
+      [-400,4,0,0,0],
+      [0,4,-8,0,0],
+      [0,4,0,-1,0],
+      [0,4,0,0,1],
+      [-400,0,4,0,0],
+      [0,-4,8,0,0],
+      [0,0,8,-1,0],
+      [0,0,8,0,1],
+      [-400,0,0,1,0],
+      [0,-4,0,1,0],
+      [0,0,-8,1,0],
+      [0,0,0,1,1],
+      [-400,0,0,0,-1],
+      [0,-4,0,0,-1],
+      [0,0,-8,0,-1],
+      [0,0,0,-1,-1],
+    ];
+
+    // 6パターンの変化量（[Δhp, Δavoid, Δdefense]）を定義
+    const passivePatternListWithoutCF = [
+      [100,-1,0],
+      [100,0,-2],
+      [-100,1,0],
+      [0,1,-2],
+      [-100,0,2],
+      [0,-1,2],
+    ]
+
+    
     // 20パターンの変化量（[Δmain, Δsub, Δhit, Δct, Δfb]）を定義
-    const patternList = [
+    const activePatternList = [
       [40,-40,0,0,0],
       [40,0,-4,0,0],
       [40,0,0,-1,0],
@@ -342,7 +407,7 @@
     ];
 
     // 6パターンの変化量（[Δmain, Δsub, Δhit]）を定義
-    const patternListWithoutCF = [
+    const activePatternListWithoutCF = [
       [10,-10,0],
       [10,0,-1],
       [-10,10,0],
@@ -364,7 +429,7 @@
       return null;
     }
 
-    function resistanseCheck(category, defenderFumble, passive_ct, passive_fb, passive_resistance) {
+    function resistanceCheck(category, defenderFumble, passive_ct, passive_fb, passive_resistance) {
       let countBSChecks = 0;
       let countBSSuccess = 0;
 
@@ -428,6 +493,7 @@
       const active_fb   = parseFloat(document.getElementById(groupId + "_active_fb").value);
       const active_kenjitsu = parseFloat(document.getElementById(groupId + "_active_kenjitsu").value);
 
+      const passive_hp      = parseFloat(document.getElementById(groupId + "_passive_hp").value);
       const passive_avoid   = parseFloat(document.getElementById(groupId + "_passive_avoid").value);
       const passive_defense = parseFloat(document.getElementById(groupId + "_passive_defense").value);
       const passive_ct      = parseFloat(document.getElementById(groupId + "_passive_ct").value);
@@ -623,7 +689,7 @@
 
             // BS抵抗判定シミュレーション（チェックオンかつ防御側回避判定でファンブルでない場合）
             if (document.getElementById("enableBSResistance").checked) {
-              tmpResistanseCheckResult = resistanseCheck(category, defenderFumble, passive_ct, passive_fb, passive_resistance);
+              tmpResistanseCheckResult = resistanceCheck(category, defenderFumble, passive_ct, passive_fb, passive_resistance);
               d3CountBSChecks += tmpResistanseCheckResult.countBSChecks;
               d3CountBSSuccess += tmpResistanseCheckResult.countBSSuccess;
             }
@@ -671,6 +737,7 @@
       document.getElementById(`${groupId}_active_ct_val`).textContent = document.getElementById(`${groupId}_active_ct`).value;
       document.getElementById(`${groupId}_active_fb_val`).textContent = document.getElementById(`${groupId}_active_fb`).value;
       document.getElementById(`${groupId}_active_kenjitsu_val`).textContent = document.getElementById(`${groupId}_active_kenjitsu`).value;
+      document.getElementById(`${groupId}_passive_hp_val`).textContent = document.getElementById(`${groupId}_passive_hp`).value;
       document.getElementById(`${groupId}_passive_avoid_val`).textContent = document.getElementById(`${groupId}_passive_avoid`).value;
       document.getElementById(`${groupId}_passive_defense_val`).textContent = document.getElementById(`${groupId}_passive_defense`).value;
       document.getElementById(`${groupId}_passive_resistance_val`).textContent = document.getElementById(`${groupId}_passive_resistance`).value;
@@ -834,9 +901,10 @@
       return totalDamage / (100 * 100);
     }
     
-    // passiveParams（受動側パラメータ）をまとめる
-    function passiveParams() {
+    // 現在のグループ1受動側ステータスを取得
+    function getCurrentPassiveStatus() {
       return {
+        hp: parseFloat(document.getElementById("group1_passive_hp").value),
         avoid: parseFloat(document.getElementById("group1_passive_avoid").value),
         defense: parseFloat(document.getElementById("group1_passive_defense").value),
         ct: parseFloat(document.getElementById("group1_passive_ct").value),
@@ -860,17 +928,40 @@
     }
 
     // 能動側最適化：複数回ループして最適な評価値配分を求め、ベストをグループ2に反映
-    function optimizeActiveIterative() {
-      const bestCandidate = iterativeOptimizeActive(100, 10);
+    function optimizeActiveIterative(hpRatio) {
+      let bestCandidate = iterativeOptimizeActive(100, 10, hpRatio);
+
       if (bestCandidate) {
         setActiveStatus(bestCandidate, "group2");
+        
+        // 最適化後の候補をグループ2に反映する補助関数
+        document.getElementById("group2_passive_hp").value = document.getElementById("group1_passive_hp").value;
+        document.getElementById("group2_passive_avoid").value = document.getElementById("group1_passive_avoid").value;
+        document.getElementById("group2_passive_defense").value = document.getElementById("group1_passive_defense").value;
+        document.getElementById("group2_passive_ct").value = document.getElementById("group1_passive_ct").value;
+        document.getElementById("group2_passive_fb").value = document.getElementById("group1_passive_fb").value;
+        document.getElementById("group2_passive_resistance").value = document.getElementById("group1_passive_resistance").value;
+        document.getElementById("group2_passive_koumyou").value = document.getElementById("group1_passive_koumyou").value;
+        document.getElementById("group2_passive_hparmor").value = document.getElementById("group1_passive_hparmor").value;
+
+        // 表示用のspanを手動で更新（updateValueは使わない）
+        document.getElementById("group2_passive_hp_val").textContent = document.getElementById("group1_passive_hp").value;
+        document.getElementById("group2_passive_avoid_val").textContent = document.getElementById("group1_passive_avoid").value;
+        document.getElementById("group2_passive_defense_val").textContent = document.getElementById("group1_passive_defense").value;
+        document.getElementById("group2_passive_ct_val").textContent = document.getElementById("group1_passive_ct").value;
+        document.getElementById("group2_passive_fb_val").textContent = document.getElementById("group1_passive_fb").value;
+        document.getElementById("group2_passive_resistance_val").textContent = document.getElementById("group1_passive_resistance").value;
+        document.getElementById("group2_passive_koumyou_val").textContent = document.getElementById("group1_passive_koumyou").value;
+        document.getElementById("group2_passive_hparmor_val").textContent = document.getElementById("group1_passive_hparmor").value;
+        
         calculateGroup("group2");
       }
     }
 
     // 能動側最適化：複数回ループして最適な評価値配分を求め、ベストをグループ1に反映
-    function singleOptimizeActiveIterative() {
-      const bestCandidate = iterativeOptimizeActive(1, 10);
+    function singleOptimizeActiveIterative(hpRatio = false) {
+      const bestCandidate = iterativeOptimizeActive(1, 10, hpRatio);
+      
       if (bestCandidate) {
         setActiveStatus(bestCandidate, "group1");
         calculateGroup("group1");
@@ -878,10 +969,13 @@
     }
 
     // 能動側最適化：外側ループで繰り返し評価し、改善が見られなくなったら終了する
-    function iterativeOptimizeActive(maxIterations = 100, noImprovementLimit = 10) {
+    function iterativeOptimizeActive(maxIterations = 100, noImprovementLimit = 10, hpRatio = false) {
       // 初期状態をグループ1から取得
       let currentCandidate = getCurrentActiveStatus();
-      let bestDamage = computeExpectedDamage(currentCandidate, passiveParams());
+      let bestDamage = computeExpectedDamage(currentCandidate, getCurrentPassiveStatus());
+      if (hpRatio) {
+        bestDamage = bestDamage / parseInt(document.getElementById('group1_passive_hp').value);
+      }
       
       // console.log(`${bestDamage}→`);
       // 探索履歴を管理する Set（JSON.stringify で文字列キー化）
@@ -891,7 +985,6 @@
       let iteration = 0;
       let noImprovementCount = 0;
 
-      
       // 入力値の制限チェック
       const minHit = parseInt(document.getElementById('group1_active_hit_min').value);
       const maxHit = parseInt(document.getElementById('group1_active_hit_max').value);
@@ -910,8 +1003,8 @@
         
         if (document.getElementById("group1_active_ct_lock").checked && document.getElementById("group1_active_fb_lock").checked) {
           // 20パターンの候補を評価
-          for (let i = 0; i < patternListWithoutCF.length; i++) {
-            const delta = patternListWithoutCF[i];
+          for (let i = 0; i < activePatternListWithoutCF.length; i++) {
+            const delta = activePatternListWithoutCF[i];
 
             // ロックされているパラメータについては、deltaが0でなければこの候補は無効
             if (document.getElementById("group1_active_main_lock").checked && delta[0] !== 0) continue;
@@ -943,18 +1036,20 @@
             ) {
               // 範囲外ならスキップ
             } else {
-              dmg = computeExpectedDamage(candidate, passiveParams());
-            }
-
-            if (dmg > localBestDamage) {
-              localBestDamage = dmg;
-              localBestCandidate = candidate;
+              dmg = computeExpectedDamage(candidate, getCurrentPassiveStatus());
+              if (hpRatio) {
+                dmg = dmg / parseInt(document.getElementById('group1_passive_hp').value);
+              }
+              if (dmg > localBestDamage) {
+                localBestDamage = dmg;
+                localBestCandidate = candidate;
+              }
             }
           }
         } else {
           // 20パターンの候補を評価
-          for (let i = 0; i < patternList.length; i++) {
-            const delta = patternList[i];
+          for (let i = 0; i < activePatternList.length; i++) {
+            const delta = activePatternList[i];
 
             // ロックされているパラメータについては、deltaが0でなければこの候補は無効
             if (document.getElementById("group1_active_main_lock").checked && delta[0] !== 0) continue;
@@ -988,18 +1083,206 @@
             ) {
               // 範囲外ならスキップ
             } else {
-              dmg = computeExpectedDamage(candidate, passiveParams());
-            }
-
-            if (dmg > localBestDamage) {
-              localBestDamage = dmg;
-              localBestCandidate = candidate;
+              dmg = computeExpectedDamage(candidate, getCurrentPassiveStatus());
+              if (hpRatio) {
+                dmg = dmg / parseInt(document.getElementById('group1_passive_hp').value);
+              }
+              if (dmg > localBestDamage) {
+                localBestDamage = dmg;
+                localBestCandidate = candidate;
+              }
             }
           }
         }
 
         // 改善があった場合は出発点を更新し、改善なしならカウンターを増加
         if (localBestCandidate && localBestDamage > bestDamage) {
+          bestDamage = localBestDamage;
+          currentCandidate = localBestCandidate;
+          noImprovementCount = 0;
+        } else {
+          noImprovementCount++;
+        }
+        iteration++;
+      }
+      // console.log(`${bestDamage}`);
+      return currentCandidate;
+    }
+
+    
+
+    // 能動側最適化：複数回ループして最適な評価値配分を求め、ベストをグループ2に反映
+    function optimizePassiveIterative(hpRatio) {
+      const bestCandidate = iterativeOptimizePassive(100, 10, hpRatio);
+
+      if (bestCandidate) {
+        setPassiveStatus(bestCandidate, "group2");
+
+        // 最適化後の候補をグループ2に反映する補助関数
+        document.getElementById("group2_active_main").value = document.getElementById("group1_active_main").value;
+        document.getElementById("group2_active_sub").value = document.getElementById("group1_active_sub").value;
+        document.getElementById("group2_active_hit").value = document.getElementById("group1_active_hit").value;
+        document.getElementById("group2_active_ct").value = document.getElementById("group1_active_ct").value;
+        document.getElementById("group2_active_fb").value = document.getElementById("group1_active_fb").value;
+        document.getElementById("group2_active_kenjitsu").value = document.getElementById("group1_active_kenjitsu").value;
+
+        // 表示用のspanを手動で更新（updateValueは使わない）
+        document.getElementById("group2_active_main_val").textContent = document.getElementById("group1_active_main").value;
+        document.getElementById("group2_active_sub_val").textContent = document.getElementById("group1_active_sub").value;
+        document.getElementById("group2_active_hit_val").textContent = document.getElementById("group1_active_hit").value;
+        document.getElementById("group2_active_ct_val").textContent = document.getElementById("group1_active_ct").value;
+        document.getElementById("group2_active_fb_val").textContent = document.getElementById("group1_active_fb").value;
+        document.getElementById("group2_active_kenjitsu_val").textContent = document.getElementById("group1_active_kenjitsu").value;
+
+        calculateGroup("group2");
+      }
+    }
+
+    // 能動側最適化：複数回ループして最適な評価値配分を求め、ベストをグループ1に反映
+    function singleOptimizePassiveIterative(hpRatio) {
+      const bestCandidate = iterativeOptimizePassive(1, 10, hpRatio);
+     
+      if (bestCandidate) {
+        setPassiveStatus(bestCandidate, "group1");
+        calculateGroup("group1");
+      }
+    }
+
+    // 能動側最適化：外側ループで繰り返し評価し、改善が見られなくなったら終了する
+    function iterativeOptimizePassive(maxIterations = 100, noImprovementLimit = 10, hpRatio = false) {
+      // 初期状態をグループ1から取得
+      let currentCandidate = getCurrentPassiveStatus();
+      let bestDamage = computeExpectedDamage(getCurrentActiveStatus(), currentCandidate);
+      
+      if (hpRatio) {
+        bestDamage = bestDamage / currentCandidate.hp;
+      }
+      
+      // console.log(`${bestDamage}→`);
+      // 探索履歴を管理する Set（JSON.stringify で文字列キー化）
+      const evaluatedCandidates = new Set();
+      evaluatedCandidates.add(JSON.stringify(currentCandidate));
+
+      let iteration = 0;
+      let noImprovementCount = 0;
+
+      
+      // 入力値の制限チェック
+      const minHp = parseInt(document.getElementById('group1_passive_hp_min').value);
+      const maxHp = parseInt(document.getElementById('group1_passive_hp_max').value);
+      const minAvoid = parseInt(document.getElementById('group1_passive_avoid_min').value);
+      const maxAvoid = parseInt(document.getElementById('group1_passive_avoid_max').value);
+      const minDefense = parseInt(document.getElementById('group1_passive_defense_min').value);
+      const maxDefense = parseInt(document.getElementById('group1_passive_defense_max').value);
+      const minCt = parseFloat(document.getElementById('group1_passive_ct_min').value);
+      const maxCt = parseFloat(document.getElementById('group1_passive_ct_max').value);
+      const minFb = parseFloat(document.getElementById('group1_passive_fb_min').value);
+      const maxFb = parseFloat(document.getElementById('group1_passive_fb_max').value);
+
+      while (iteration < maxIterations && noImprovementCount < noImprovementLimit) {
+        let localBestCandidate = null;
+        let localBestDamage = bestDamage;
+        
+        if (document.getElementById("group1_passive_ct_lock").checked && document.getElementById("group1_passive_fb_lock").checked) {
+          // 20パターンの候補を評価
+          for (let i = 0; i < passivePatternListWithoutCF.length; i++) {
+            const delta = passivePatternListWithoutCF[i];
+
+            // ロックされているパラメータについては、deltaが0でなければこの候補は無効
+            if (document.getElementById("group1_passive_hp_lock").checked && delta[0] !== 0) continue;
+            if (document.getElementById("group1_passive_avoid_lock").checked && delta[1] !== 0) continue;
+            if (document.getElementById("group1_passive_defense_lock").checked && delta[2] !== 0) continue;
+            
+            const candidate = {
+              hp: currentCandidate.hp + delta[0],
+              avoid:  currentCandidate.avoid  + delta[1],
+              defense:  currentCandidate.defense  + delta[2],
+              resistance:   currentCandidate.resistance,
+              ct:   currentCandidate.ct,
+              fb:   currentCandidate.fb,
+              koumyou: currentCandidate.koumyou,
+              hparmor: currentCandidate.hparmor
+            };
+            const key = JSON.stringify(candidate);
+            // すでに評価済みならスキップ
+            if (evaluatedCandidates.has(key)) continue;
+            evaluatedCandidates.add(key);
+
+            let dmg = 0;
+
+            // 範囲チェック（各スライダーの制約を確認）
+            if (
+              candidate.hp < minHp || candidate.hp > maxHp ||
+              candidate.avoid < minAvoid || candidate.avoid > maxAvoid ||
+              candidate.defense < minDefense || candidate.defense > maxDefense ||
+              candidate.ct < minCt || candidate.ct > maxCt ||
+              candidate.fb < minFb || candidate.fb > maxFb
+            ) {
+              // 範囲外ならスキップ
+            } else {
+              dmg = computeExpectedDamage(getCurrentActiveStatus(), candidate);
+              if (hpRatio) {
+                dmg = dmg / candidate.hp;
+              }
+              if (dmg < localBestDamage) {
+                localBestDamage = dmg;
+                localBestCandidate = candidate;
+              }
+            }
+          }
+        } else {
+          // 20パターンの候補を評価
+          for (let i = 0; i < passivePatternList.length; i++) {
+            const delta = passivePatternList[i];
+
+            // ロックされているパラメータについては、deltaが0でなければこの候補は無効
+            if (document.getElementById("group1_passive_hp_lock").checked && delta[0] !== 0) continue;
+            if (document.getElementById("group1_passive_avoid_lock").checked && delta[1] !== 0) continue;
+            if (document.getElementById("group1_passive_defense_lock").checked && delta[2] !== 0) continue;
+            if (document.getElementById("group1_passive_ct_lock").checked && delta[3] !== 0) continue;
+            if (document.getElementById("group1_passive_fb_lock").checked && delta[4] !== 0) continue;
+            
+            const candidate = {
+              hp: currentCandidate.hp + delta[0],
+              avoid:  currentCandidate.avoid  + delta[1],
+              defense:  currentCandidate.defense  + delta[2],
+              resistance: currentCandidate.resistance,
+              ct:   currentCandidate.ct   + delta[3],
+              fb:   currentCandidate.fb   + delta[4],
+              koumyou:   currentCandidate.koumyou,
+              hparmor:   currentCandidate.hparmor
+            };
+            const key = JSON.stringify(candidate);
+            // すでに評価済みならスキップ
+            if (evaluatedCandidates.has(key)) continue;
+            evaluatedCandidates.add(key);
+
+            let dmg = 0;
+
+            // 範囲チェック（各スライダーの制約を確認）
+            if (
+              candidate.hp < minHp || candidate.hp > maxHp ||
+              candidate.avoid < minAvoid || candidate.avoid > maxAvoid ||
+              candidate.defense < minDefense || candidate.defense > maxDefense ||
+              candidate.ct < minCt || candidate.ct > maxCt ||
+              candidate.fb < minFb || candidate.fb > maxFb
+            ) {
+              // 範囲外ならスキップ
+            } else {
+              dmg = computeExpectedDamage(getCurrentActiveStatus(), candidate);
+              if (hpRatio) {
+                dmg = dmg / candidate.hp;
+              }
+              if (dmg < localBestDamage) {
+                localBestDamage = dmg;
+                localBestCandidate = candidate;
+              }
+            }
+          }
+        }
+
+        // 改善があった場合は出発点を更新し、改善なしならカウンターを増加
+        if (localBestCandidate && localBestDamage < bestDamage) {
           bestDamage = localBestDamage;
           currentCandidate = localBestCandidate;
           noImprovementCount = 0;
@@ -1033,6 +1316,30 @@
       calculateGroup(groupId);
     }
 
+    function setPassiveStatus(candidate, groupId) {
+      document.getElementById(groupId + "_passive_hp").value = candidate.hp;
+      document.getElementById(groupId + "_passive_avoid").value = candidate.avoid;
+      document.getElementById(groupId + "_passive_defense").value = candidate.defense;
+      document.getElementById(groupId + "_passive_resistance").value = candidate.resistance;
+      document.getElementById(groupId + "_passive_ct").value = candidate.ct;
+      document.getElementById(groupId + "_passive_fb").value = candidate.fb;
+      document.getElementById(groupId + "_passive_koumyou").value = candidate.koumyou;
+      document.getElementById(groupId + "_passive_hparmor").value = candidate.hparmor;
+
+      // 表示用のspanを手動で更新（updateValueは使わない）
+      document.getElementById(groupId + "_passive_hp_val").textContent = candidate.hp;
+      document.getElementById(groupId + "_passive_avoid_val").textContent = candidate.avoid;
+      document.getElementById(groupId + "_passive_defense_val").textContent = candidate.defense;
+      document.getElementById(groupId + "_passive_resistance_val").textContent = candidate.resistance;
+      document.getElementById(groupId + "_passive_ct_val").textContent = candidate.ct;
+      document.getElementById(groupId + "_passive_fb_val").textContent = candidate.fb;
+      document.getElementById(groupId + "_passive_koumyou_val").textContent = candidate.koumyou;
+      document.getElementById(groupId + "_passive_hparmor_val").textContent = candidate.hparmor;
+
+      // 計算は最後に1回だけ
+      calculateGroup(groupId);
+    }
+
     function exportCalculationResults(groupId) {
       // グループのパラメータを取得
       const parameters = {
@@ -1045,6 +1352,7 @@
               kenjitsu: parseFloat(document.getElementById(groupId + "_active_kenjitsu").value)
           },
           passive: {
+              hp: parseFloat(document.getElementById(groupId + "_passive_hp").value),
               avoid: parseFloat(document.getElementById(groupId + "_passive_avoid").value),
               defense: parseFloat(document.getElementById(groupId + "_passive_defense").value),
               ct: parseFloat(document.getElementById(groupId + "_passive_ct").value),
@@ -1105,14 +1413,15 @@
           groupId + "_active_hit",
           groupId + "_active_ct",
           groupId + "_active_fb",
-          groupId + "_active_kenjitsu", // 新規追加：堅実
+          groupId + "_active_kenjitsu",
+          groupId + "_passive_hp",
           groupId + "_passive_avoid",
           groupId + "_passive_defense",
           groupId + "_passive_ct",
           groupId + "_passive_fb",
           groupId + "_passive_resistance",
-          groupId + "_passive_koumyou",   // 新規追加：巧妙
-          groupId + "_passive_hparmor"    // 新規追加：HP鎧
+          groupId + "_passive_koumyou",
+          groupId + "_passive_hparmor"
         ];
         sliderIds.forEach(function(id) {
           document.getElementById(id).addEventListener("change", function() {
@@ -1135,10 +1444,30 @@
     });
     
     // 「能動側最適化」ボタン
-    document.getElementById("optimizeActiveButton").addEventListener("click", optimizeActiveIterative);
+    document.getElementById("optimizeActiveButton").addEventListener("click", () => {optimizeActiveIterative()});
 
     // 「能動側最適化(シングル)」ボタン
-    document.getElementById("singleOptimizeActiveButton").addEventListener("click", singleOptimizeActiveIterative);
+    document.getElementById("singleOptimizeActiveButton").addEventListener("click", () => {singleOptimizeActiveIterative()});
+    
+    // 「受動側最適化」ボタン
+    document.getElementById("optimizePassiveButton").addEventListener("click", () => {optimizePassiveIterative()});
+
+    // 「受動側最適化(シングル)」ボタン
+    document.getElementById("singleOptimizePassiveButton").addEventListener("click", () => {singleOptimizePassiveIterative()});
+
+    // HP比の要素を取り入れて計算する場合
+    // 「能動側最適化」ボタン
+    document.getElementById("optimizeActiveHPRatioButton").addEventListener("click", () => {optimizeActiveIterative(true)});
+
+    // 「能動側最適化(シングル)」ボタン
+    document.getElementById("singleOptimizeActiveHPRatioButton").addEventListener("click", () => {singleOptimizeActiveIterative(true)});
+    
+    // 「受動側最適化」ボタン
+    document.getElementById("optimizePassiveHPRatioButton").addEventListener("click", () => {optimizePassiveIterative(true)});
+
+    // 「受動側最適化(シングル)」ボタン
+    document.getElementById("singleOptimizePassiveHPRatioButton").addEventListener("click", () => {singleOptimizePassiveIterative(true)});
+
 
     // スライダーの下限・上限をリアルタイムで他グループに反映する
     const changeSlider = (index, sourceGroup) => {
@@ -1172,6 +1501,7 @@
         document.getElementById(`${group}_active_ct_${suffix}`).addEventListener('input', () => changeSlider(`active_ct`, group));
         document.getElementById(`${group}_active_fb_${suffix}`).addEventListener('input', () => changeSlider(`active_fb`, group));
         document.getElementById(`${group}_active_kenjitsu_${suffix}`).addEventListener('input', () => changeSlider(`active_kenjitsu`, group));
+        document.getElementById(`${group}_passive_hp_${suffix}`).addEventListener('input', () => changeSlider(`passive_hp`, group));
         document.getElementById(`${group}_passive_avoid_${suffix}`).addEventListener('input', () => changeSlider(`passive_avoid`, group));
         document.getElementById(`${group}_passive_defense_${suffix}`).addEventListener('input', () => changeSlider(`passive_defense`, group));
         document.getElementById(`${group}_passive_resistance_${suffix}`).addEventListener('input', () => changeSlider(`passive_resistance`, group));
