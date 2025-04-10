@@ -80,11 +80,13 @@
     <div class="optimize-buttons">
       <button id="optimizeActiveButton">能動側最適化(実数)</button>
       <button id="singleOptimizeActiveButton">能動側最適化(実数)(シングル)</button>
+      <!-- HPを操作しないので事実上同じ -->
+      <!-- <button id="optimizeActiveHPRatioButton">能動側最適化(HP比)</button>
+      <button id="singleOptimizeActiveHPRatioButton">能動側最適化(HP比)(シングル)</button> -->
+      <br>
+      <br>
       <button id="optimizePassiveButton">受動側最適化(実数)</button>
       <button id="singleOptimizePassiveButton">受動側最適化(実数)(シングル)</button>
-      <br>
-      <button id="optimizeActiveHPRatioButton">能動側最適化(HP比)</button>
-      <button id="singleOptimizeActiveHPRatioButton">能動側最適化(HP比)(シングル)</button>
       <button id="optimizePassiveHPRatioButton">受動側最適化(HP比)</button>
       <button id="singleOptimizePassiveHPRatioButton">受動側最適化(HP比)(シングル)</button>
     </div>
@@ -889,6 +891,9 @@
               // 防技判定まで経由した平均ダメージ
               let avgDamageAfterDefense = sumDamageAfterDefense / 100;
               sumDamageForD3 += avgDamageAfterDefense;
+              
+              // 2025/04/10時点の仕様
+              // sumDamageForD3 += (defenseCheckedMainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
             }
           }
           // 命中度判定まで経由した平均ダメージ
@@ -1448,20 +1453,22 @@
 
     // 「能動側最適化(シングル)」ボタン
     document.getElementById("singleOptimizeActiveButton").addEventListener("click", () => {singleOptimizeActiveIterative()});
-    
+
+    // HPを操作しないので事実上同じ処理
+    // // HP比の要素を取り入れて計算する場合
+    // // 「能動側最適化」ボタン
+    // document.getElementById("optimizeActiveHPRatioButton").addEventListener("click", () => {optimizeActiveIterative(true)});
+
+    // // 「能動側最適化(シングル)」ボタン
+    // document.getElementById("singleOptimizeActiveHPRatioButton").addEventListener("click", () => {singleOptimizeActiveIterative(true)});
+
+    // HP比の要素を取り入れて計算する場合
     // 「受動側最適化」ボタン
     document.getElementById("optimizePassiveButton").addEventListener("click", () => {optimizePassiveIterative()});
 
     // 「受動側最適化(シングル)」ボタン
     document.getElementById("singleOptimizePassiveButton").addEventListener("click", () => {singleOptimizePassiveIterative()});
 
-    // HP比の要素を取り入れて計算する場合
-    // 「能動側最適化」ボタン
-    document.getElementById("optimizeActiveHPRatioButton").addEventListener("click", () => {optimizeActiveIterative(true)});
-
-    // 「能動側最適化(シングル)」ボタン
-    document.getElementById("singleOptimizeActiveHPRatioButton").addEventListener("click", () => {singleOptimizeActiveIterative(true)});
-    
     // 「受動側最適化」ボタン
     document.getElementById("optimizePassiveHPRatioButton").addEventListener("click", () => {optimizePassiveIterative(true)});
 
