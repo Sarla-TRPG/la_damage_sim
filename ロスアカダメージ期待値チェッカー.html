@@ -103,7 +103,7 @@
           <label for="group1_active_sub">副攻:
             <span id="group1_active_sub_val" class="value"></span>
           </label>
-          <input type="number" id="group1_active_sub_min" placeholder="下限" value="0">
+          <input type="number" id="group1_active_sub_min" placeholder="下限" value="50">
           ～
           <input type="number" id="group1_active_sub_max" placeholder="上限" value="600">
           <input type="range" id="group1_active_sub" min="50" max="600" step="10" value="50" oninput="updateValue('group1_active_sub_val', this.value, 'group1')">
@@ -359,6 +359,65 @@
       }
     }
 
+    function getDamageFromCache(damageCache, key, computeFn) {
+      if (damageCache.has(key)) return damageCache.get(key);
+      return null;
+    }
+
+    function resistanseCheck(category, defenderFumble, passive_ct, passive_fb, passive_resistance) {
+      let countBSChecks = 0;
+      let countBSSuccess = 0;
+
+      // BS抵抗値 = 防御側「抵抗」パラメータ + ヒット種別ごとの補正
+      let bsBonus = 0;
+      if (category === "graze") {
+        bsBonus = 50;
+      } else if (category === "light") {
+        bsBonus = 25;
+      } else if (category === "clean") {
+        bsBonus = 10;
+      } else if (category === "hard") {
+        bsBonus = 0;
+      } else if (category === "smash") {
+        bsBonus = -25;
+      }
+      let bsResValue = passive_resistance + bsBonus;
+      if (defenderFumble || bsResValue < 0) {
+        // 抵抗判定の回数を抵抗判定ダイスの1d100の100通り分カウントすることで全て失敗したと意味づける
+        countBSChecks += 100;
+      } else {
+        let successCount = 0;
+
+        for (let bsRoll = 1; bsRoll <= 100; bsRoll++) {
+          countBSChecks++;
+          const bsCrit = bsRoll >= (100 - passive_ct);
+          const bsFumble = bsRoll <= passive_fb;
+          let bsSuccess = false;
+
+          if (bsCrit) {
+            bsSuccess = true;
+          } else if (bsFumble) {
+            bsSuccess = false;
+          } else {
+            if (bsResValue >= 0) {
+              const target = 100 - bsResValue;
+              bsSuccess = bsRoll >= target;
+            } else {
+              bsSuccess = false;
+            }
+          }
+
+          if (bsSuccess) {
+            countBSSuccess++;
+          }
+        }
+      }
+      return {
+        countBSChecks,
+        countBSSuccess
+      }
+    }
+
     // グループごとの計算関数（BS抵抗判定・各ヒット種別の発生率も算出）
     function calculateGroup(groupId) {
       // 入力値の取得（各要素は groupId + "_" プレフィックス付き）
@@ -382,17 +441,27 @@
       let countBSChecks = 0, countBSSuccess = 0;
       let totalDamage = 0;
 
+      const damageCache = new Map();
+
       // 四重ループ：d_a, d_d, d3, d4
       // 命中ダイス
       for (let d_a = 1; d_a <= 100; d_a++) {
+        // 命中判定のダイスがFB値以下なら自動失敗
+        // この時は回避判定、命中度判定の1d100×1d100の10000通りのループ（d2ループ×d3ループ）をすべて完全回避した扱いでカウント
+        if (d_a <= active_fb) {
+          countMiss += 10000; // 内側ループ d2×d3
+          continue;
+        }
+        const attackerRoll = active_hit + d_a;
+        const attackerFumble = (d_a <= active_fb);
+        const attackerCritical = (d_a >= (100 - active_ct));
+
         // 回避ダイス
         for (let d_d = 1; d_d <= 100; d_d++) {
-          const attackerRoll = active_hit + d_a;
           const defenderRoll = passive_avoid + d_d;
-          const attackerFumble = (d_a <= active_fb);
           const defenderFumble = (d_d <= passive_fb);
-          const attackerCritical = (d_a >= (100 - active_ct));
           const defenderCritical = (d_d >= (100 - passive_ct));
+          let tmpResistanseCheckResult = null;
           let hit = false, isCritical = false;
           if (attackerFumble) {
             hit = false;
@@ -407,14 +476,26 @@
             hit = (attackerRoll > defenderRoll);
           }
 
-          // ヒットしなければ d3 ループ分（100通り）としてカウント
+          // ヒットしなければ命中度判定の1d100の100通りのループ（d3ループ）をすべて完全回避した扱いでカウント
           if (!hit) {
-            countMiss += 100; // 内側ループ d3×d4
+            countMiss += 100; // 内側ループ d3
             continue;
           }
 
+          // 命中度差、堅実値、クリティカルヒット、防技の値をキーにd3ループ以内の判定結果をキャッシュから取得する
+          const cacheKey = `${attackerRoll - defenderRoll}_${active_kenjitsu}_${isCritical}_${passive_defense}`;
+          const cacheResult = getDamageFromCache(damageCache, cacheKey);
+          if (cacheResult !== null) {
+            // cacheResultに格納されたavgDamageForOuterPair, d3CountBSChecks, d3CountBSSuccessを使用する
+            totalDamage += cacheResult.avgDamageForOuterPair;
+            countBSChecks += cacheResult.d3CountBSChecks;
+            countBSSuccess += cacheResult.d3CountBSSuccess;
+            // 次のループに進む
+            continue;
+          }
           // ヒットの場合：内側ループ（d3：命中度判定、d4：防御技術判定）
           let sumDamageForD3 = 0;
+          let d3CountBSChecks = 0, d3CountBSSuccess = 0;
           // 命中度ダイス
           for (let d3 = 1; d3 <= 100; d3++) {
             // 命中度ダイスの補正：堅実の適用（最大値100）
@@ -482,9 +563,9 @@
               trueDamage = Math.floor((isCritical ? active_sub * 2 : active_sub) * multiplier);
             }
 
+            let sumDamageAfterDefense = 0;
             // 防御技術判定（d4）ループ（回避ファンブルしていない場合 かつ 防技がマイナスでない場合）
             if (!defenderFumble && passive_defense >= 0) {
-              let sumDamageAfterDefense = 0;
               for (let d4 = 1; d4 <= 100; d4++) {
                 const defenseDie = d4;
                 const defenseTarget = 100 - passive_defense;
@@ -509,77 +590,52 @@
               let avgDamageAfterDefense = sumDamageAfterDefense / 100;
               sumDamageForD3 += avgDamageAfterDefense;
             } else {
-              let extraMultiplier = 0;
-              if (passive_defense < 0) {
-                const neg = -passive_defense;
-                if (neg >= 1 && neg <= 10) { extraMultiplier = 0.20; }
-                else if (neg >= 11 && neg <= 20) { extraMultiplier = 0.40; }
-                else if (neg >= 21 && neg <= 30) { extraMultiplier = 0.60; }
-                else if (neg >= 31 && neg <= 40) { extraMultiplier = 0.80; }
-                else if (neg >= 41) { extraMultiplier = 1.00; }
-              } 
 
-              // 防技マイナス時の追加ダメージ反映
-              let sumDamage = (mainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
-              // HP鎧の適用：クリーンヒット以上の場合のみ、最終HPダメージから軽減（0未満にならないように）
-              if (category === "clean" || category === "hard" || category === "smash") {
-                sumDamage = Math.max(0, sumDamage - passive_hparmor);
+              // TODO:2025/04/10時点で未実装の要素 回避判定FBや防技マイナスの場合も主攻ダメ1.3倍の防技判定FBチェックだけ行う
+              let defenseCheckedMainDamage = mainDamage;
+              let extraMultiplier = 0;
+              const neg = -passive_defense;
+              if (neg >= 1 && neg <= 10) { extraMultiplier = 0.20; }
+              else if (neg >= 11 && neg <= 20) { extraMultiplier = 0.40; }
+              else if (neg >= 21 && neg <= 30) { extraMultiplier = 0.60; }
+              else if (neg >= 31 && neg <= 40) { extraMultiplier = 0.80; }
+              else if (neg >= 41) { extraMultiplier = 1.00; }
+
+              for (let d4 = 1; d4 <= 100; d4++) {
+                const defenseDie = d4;
+                const defenseTarget = 100 - passive_defense;
+                const defenseFumble = (defenseDie <= passive_fb);
+                if (defenseFumble) {
+                  defenseCheckedMainDamage = (mainDamage * 1.3);
+                }
+                // 防技マイナス時の追加ダメージ反映
+                let damageAfterDefenseCheck = (defenseCheckedMainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
+                // HP鎧の適用：クリーンヒット以上の場合のみ、最終HPダメージから軽減（0未満にならないように）
+                if (category === "clean" || category === "hard" || category === "smash") {
+                  damageAfterDefenseCheck = Math.max(0, damageAfterDefenseCheck - passive_hparmor);
+                }
+                sumDamageAfterDefense += damageAfterDefenseCheck;
               }
-              sumDamageForD3 += sumDamage;
+              // 防技判定まで経由した平均ダメージ
+              let avgDamageAfterDefense = sumDamageAfterDefense / 100;
+              sumDamageForD3 += avgDamageAfterDefense;
             }
 
             // BS抵抗判定シミュレーション（チェックオンかつ防御側回避判定でファンブルでない場合）
-            if (document.getElementById("enableBSResistance").checked && !defenderFumble) {
-              countBSChecks++;
-              // BS抵抗値 = 防御側「抵抗」パラメータ + ヒット種別ごとの補正
-              let bsBonus = 0;
-              if (category === "graze") {
-                bsBonus = 50;
-              } else if (category === "light") {
-                bsBonus = 25;
-              } else if (category === "clean") {
-                bsBonus = 10;
-              } else if (category === "hard") {
-                bsBonus = 0;
-              } else if (category === "smash") {
-                bsBonus = -25;
-              }
-              
-              let bsResValue = passive_resistance + bsBonus;
-              let successCount = 0;
-
-              if (bsResValue >= 0) {
-                for (let bsRoll = 1; bsRoll <= 100; bsRoll++) {
-                  const bsCrit = bsRoll >= (100 - passive_ct);
-                  const bsFumble = bsRoll <= passive_fb;
-                  let bsSuccess = false;
-
-                  if (bsCrit) {
-                    bsSuccess = true;
-                  } else if (bsFumble) {
-                    bsSuccess = false;
-                  } else {
-                    if (bsResValue >= 0) {
-                      const target = 100 - bsResValue;
-                      bsSuccess = bsRoll >= target;
-                    } else {
-                      bsSuccess = false;
-                    }
-                  }
-
-                  if (bsSuccess) {
-                    successCount++;
-                  }
-                }
-              }
-
-              // 成功率を期待値的に加算（100通り中の成功数）
-              countBSSuccess += (successCount / 100);
+            if (document.getElementById("enableBSResistance").checked) {
+              tmpResistanseCheckResult = resistanseCheck(category, defenderFumble, passive_ct, passive_fb, passive_resistance);
+              d3CountBSChecks += tmpResistanseCheckResult.countBSChecks;
+              d3CountBSSuccess += tmpResistanseCheckResult.countBSSuccess;
             }
           }
+
           // d3ループ分の平均を算出
           const avgDamageForOuterPair = sumDamageForD3 / 100;
           totalDamage += avgDamageForOuterPair;
+          countBSChecks += d3CountBSChecks;
+          countBSSuccess += d3CountBSSuccess;
+          
+          damageCache.set(cacheKey, {avgDamageForOuterPair, d3CountBSChecks, d3CountBSSuccess});
         }
       }
 
@@ -717,6 +773,9 @@
               let avgDamageAfterDefense = sumDamageAfterDefense / 100;
               sumDamageForD3 += avgDamageAfterDefense;
             } else {
+
+              // TODO:2025/04/10時点で未実装の要素 回避判定FBや防技マイナスの場合も主攻ダメ1.3倍の防技判定FBチェックだけ行う
+              let defenseCheckedMainDamage = mainDamage;
               let extraMultiplier = 0;
               const neg = -passiveFull.defense;
               if (neg >= 1 && neg <= 10) { extraMultiplier = 0.20; }
@@ -724,13 +783,25 @@
               else if (neg >= 21 && neg <= 30) { extraMultiplier = 0.60; }
               else if (neg >= 31 && neg <= 40) { extraMultiplier = 0.80; }
               else if (neg >= 41) { extraMultiplier = 1.00; }
-              // 防技マイナス時の追加ダメージ反映
-              let sumDamage = (mainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
-              // HP鎧の処理
-              if (category === "clean" || category === "hard" || category === "smash") {
-                sumDamage = Math.max(0, sumDamage - passiveFull.hparmor);
+
+              for (let d4 = 1; d4 <= 100; d4++) {
+                const defenseDie = d4;
+                const defenseTarget = 100 - passiveFull.defense;
+                const defenseFumble = (defenseDie <= passiveFull.fb);
+                if (defenseFumble) {
+                  defenseCheckedMainDamage = (mainDamage * 1.3);
+                }
+                // 防技判定結果反映
+                let damageAfterDefenseCheck = (defenseCheckedMainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
+                // HP鎧の処理
+                if (category === "clean" || category === "hard" || category === "smash") {
+                  damageAfterDefenseCheck = Math.max(0, damageAfterDefenseCheck - passiveFull.hparmor);
+                }
+                sumDamageAfterDefense += damageAfterDefenseCheck;
               }
-              sumDamageForD3 += sumDamage;
+              // 防技判定まで経由した平均ダメージ
+              let avgDamageAfterDefense = sumDamageAfterDefense / 100;
+              sumDamageForD3 += avgDamageAfterDefense;
             }
           }
           // 命中度判定まで経由した平均ダメージ
