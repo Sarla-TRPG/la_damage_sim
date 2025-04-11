@@ -83,7 +83,7 @@
       </label>
       &nbsp;&nbsp;
       <label>
-        <input type="checkbox" id="enableBSResistance">
+        <input type="checkbox" id="enableBSResistance" checked>
         BS抵抗判定を有効にする
       </label>
     </div>
@@ -116,7 +116,7 @@
           <input type="number" id="group1_active_main_min" placeholder="下限" value="100">
           ～
           <input type="number" id="group1_active_main_max" placeholder="上限" value="1500">
-          <input type="range" id="group1_active_main" min="50" max="1500" step="10" value="500" oninput="updateValue('group1_active_main_val', this.value, 'group1')">
+          <input type="range" id="group1_active_main" min="100" max="1500" step="10" value="500" oninput="updateValue('group1_active_main_val', this.value, 'group1')">
         </div>
         <div class="slider-group">
           <input type="checkbox" id="group1_active_sub_lock">
@@ -167,6 +167,26 @@
           ～
           <input type="number" id="group1_active_kenjitsu_max" placeholder="上限" value="100">
           <input type="range" id="group1_active_kenjitsu" min="0" max="100" step="1" value="0" oninput="updateValue('group1_active_kenjitsu_val', this.value, 'group1')">
+        </div>
+        <div class="slider-group">
+          <input type="checkbox" id="group1_active_mamou_lock" checked>
+          <label for="group1_active_mamou">摩耗:
+            <span id="group1_active_mamou_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_active_mamou_min" placeholder="下限" value="0">
+          ～
+          <input type="number" id="group1_active_mamou_max" placeholder="上限" value="100">
+          <input type="range" id="group1_active_mamou" min="0" max="100" step="1" value="0" oninput="updateValue('group1_active_mamou_val', this.value, 'group1')">
+        </div>
+        <div class="slider-group">
+          <input type="checkbox" id="group1_active_tajuuei_lock" checked>
+          <label for="group1_active_tajuuei">多重影:
+            <span id="group1_active_tajuuei_val" class="value"></span>
+          </label>
+          <input type="number" id="group1_active_tajuuei_min" placeholder="下限" value="0">
+          ～
+          <input type="number" id="group1_active_tajuuei_max" placeholder="上限" value="2">
+          <input type="range" id="group1_active_tajuuei" min="0" max="2" step="1" value="0" oninput="updateValue('group1_active_tajuuei_val', this.value, 'group1')">
         </div>
       </fieldset>
       
@@ -303,6 +323,18 @@
             <span id="group2_active_kenjitsu_val" class="value"></span>
           </label>
           <input type="range" id="group2_active_kenjitsu" min="0" max="100" step="1" value="0" oninput="updateValue('group2_active_kenjitsu_val', this.value, 'group2')">
+        </div>
+        <div class="slider-group">
+          <label for="group2_active_mamou">摩耗:
+            <span id="group2_active_mamou_val" class="value"></span>
+          </label>
+          <input type="range" id="group2_active_mamou" min="0" max="100" step="1" value="0" oninput="updateValue('group1_active_mamou_val', this.value, 'group2')">
+        </div>
+        <div class="slider-group">
+          <label for="group2_active_tajuuei">摩耗:
+            <span id="group2_active_tajuuei_val" class="value"></span>
+          </label>
+          <input type="range" id="group2_active_tajuuei" min="0" max="100" step="1" value="0" oninput="updateValue('group1_active_tajuuei_val', this.value, 'group2')">
         </div>
       </fieldset>
       
@@ -454,7 +486,14 @@
 
       // BS抵抗値 = 防御側「抵抗」パラメータ + ヒット種別ごとの補正
       let bsBonus = 0;
-      if (category === "graze") {
+      if (category === "miss") {
+        // ヒットレート確認時に完全回避となっているパターン。全て抵抗に成功したと処理する
+        // TODO:回避判定にFBした場合は抵抗判定を行わず～とあるが、ヒットレート確認段階での完全回避のパターンはこれに抵触しないと解釈している
+        return {
+          countBSChecks: Math.pow(100, 1),
+          countBSSuccess: Math.pow(100, 1),
+        }
+      } else if (category === "graze") {
         bsBonus = 50;
       } else if (category === "light") {
         bsBonus = 25;
@@ -502,6 +541,48 @@
       }
     }
 
+    // ページロード時に空のキャッシュを初期化
+    window.multiShadowCache = window.multiShadowCache || {};
+
+    function multiShadowCount(shadowLevel, fumbleThreshold) {
+      // キーをユニークな文字列にする（例: "2_10"）
+      const key = `${shadowLevel}_${fumbleThreshold}`;
+
+      // キャッシュがあれば返す
+      if (window.multiShadowCache[key]) {
+          return window.multiShadowCache[key];
+      }
+      
+      const counts = Array(100).fill(0); // 出目1〜100に対応する配列（インデックス0〜99）
+
+      const totalDice = shadowLevel + 1;
+      const rolls = [];
+
+      const loop = (depth) => {
+        if (depth === totalDice) {
+          const first = rolls[0];
+
+          if (first <= fumbleThreshold) {
+            counts[first - 1]++;
+          } else {
+            const max = Math.max(...rolls);
+            counts[max - 1]++;
+          }
+          return;
+        }
+
+        for (let i = 1; i <= 100; i++) {
+          rolls.push(i);
+          loop(depth + 1);
+          rolls.pop();
+        }
+      };
+
+      loop(0);
+
+      return counts;
+    }
+
     // グループごとの計算関数（BS抵抗判定・各ヒット種別の発生率も算出）
     function calculateGroup(groupId) {
       // 入力値の取得（各要素は groupId + "_" プレフィックス付き）
@@ -511,6 +592,8 @@
       const active_ct   = parseFloat(document.getElementById(groupId + "_active_ct").value);
       const active_fb   = parseFloat(document.getElementById(groupId + "_active_fb").value);
       const active_kenjitsu = parseFloat(document.getElementById(groupId + "_active_kenjitsu").value);
+      const active_mamou = parseFloat(document.getElementById(groupId + "_active_mamou").value);
+      const active_tajuuei = parseFloat(document.getElementById(groupId + "_active_tajuuei").value);
 
       const passive_hp      = parseFloat(document.getElementById(groupId + "_passive_hp").value);
       const passive_avoid   = parseFloat(document.getElementById(groupId + "_passive_avoid").value);
@@ -527,14 +610,16 @@
       let totalDamage = 0;
 
       const damageCache = new Map();
+      const multiShadowArray = multiShadowCount(active_tajuuei, active_fb);
 
       // 四重ループ：d_a, d_d, d3, d4
       // 命中ダイス
-      for (let d_a = 1; d_a <= 100; d_a++) {
+      for(let d_a = 1; d_a <= 100; d_a++) {
+
         // 命中判定のダイスがFB値以下なら自動失敗
         // この時は回避判定、命中度判定の1d100×1d100の10000通りのループ（d2ループ×d3ループ）をすべて完全回避した扱いでカウント
         if (d_a <= active_fb) {
-          countMiss += 10000; // 内側ループ d2×d3
+          countMiss += Math.pow(100, 2 + active_tajuuei); // 内側ループ d2×d3×(100^多重影)
           continue;
         }
         const attackerRoll = active_hit + d_a;
@@ -549,6 +634,7 @@
           let tmpResistanseCheckResult = null;
           let hit = false, isCritical = false;
           if (attackerFumble) {
+            // 上の条件でスキップされているため通らない
             hit = false;
           } else if (!defenderFumble && defenderCritical) {
             hit = false;
@@ -561,31 +647,33 @@
             hit = (attackerRoll > defenderRoll);
           }
 
-          // ヒットしなければ命中度判定の1d100の100通りのループ（d3ループ）をすべて完全回避した扱いでカウント
           if (!hit) {
-            countMiss += 100; // 内側ループ d3
+            // 多重影X：命中判定ダイスの出目パターン100^(1+X)通りの内指定出目の出現回数だけ乗算
+            countMiss += Math.pow(100, 1) * multiShadowArray[d_a - 1]; // ヒットしなければ命中度判定の1d100の100通りのループ（d3ループ）をすべて完全回避した扱いでカウント
+            countBSChecks += Math.pow(100, 2) * multiShadowArray[d_a - 1]; // ヒットしなければ命中度ダイス100通り、抵抗ダイス100通りの計10000通りをすべて抵抗した扱いでカウント
+            countBSSuccess += Math.pow(100, 2) * multiShadowArray[d_a - 1]; // ヒットしなければ命中度ダイス100通り、抵抗ダイス100通りの計10000通りをすべて抵抗した扱いでカウント
             continue;
           }
 
           // 命中度差、堅実値、クリティカルヒット、防技の値をキーにd3ループ以内の判定結果をキャッシュから取得する
-          const cacheKey = `${attackerRoll - defenderRoll}_${active_kenjitsu}_${isCritical}_${passive_defense}`;
+          const cacheKey = `${attackerRoll - defenderRoll}_${active_kenjitsu}_${active_mamou}_${active_tajuuei}_${isCritical}_${passive_defense}`;
           const cacheResult = getDamageFromCache(damageCache, cacheKey);
           if (cacheResult !== null) {
             // cacheResultに格納されたavgDamageForOuterPair, d3CountBSChecks, d3CountBSSuccessを使用する
-            totalDamage += cacheResult.avgDamageForOuterPair;
-            countBSChecks += cacheResult.d3CountBSChecks;
-            countBSSuccess += cacheResult.d3CountBSSuccess;
+            totalDamage += cacheResult.avgDamageForOuterPair * multiShadowArray[d_a - 1];
+            countBSChecks += cacheResult.d3CountBSChecks * multiShadowArray[d_a - 1];
+            countBSSuccess += cacheResult.d3CountBSSuccess * multiShadowArray[d_a - 1];
 
-            countMiss += cacheResult.d3CountMiss;
-            countGraze += cacheResult.d3CountGraze;
-            countLight += cacheResult.d3CountLight;
-            countClean += cacheResult.d3CountClean;
-            countHard += cacheResult.d3CountHard;
-            countSmash += cacheResult.d3CountSmash;
-            countCriticalLight += cacheResult.d3CountCriticalLight;
-            countCriticalClean += cacheResult.d3CountCriticalClean;
-            countCriticalHard += cacheResult.d3CountCriticalHard;
-            countCriticalSmash += cacheResult.d3CountCriticalSmash;
+            countMiss += cacheResult.d3CountMiss * multiShadowArray[d_a - 1];
+            countGraze += cacheResult.d3CountGraze * multiShadowArray[d_a - 1];
+            countLight += cacheResult.d3CountLight * multiShadowArray[d_a - 1];
+            countClean += cacheResult.d3CountClean * multiShadowArray[d_a - 1];
+            countHard += cacheResult.d3CountHard * multiShadowArray[d_a - 1];
+            countSmash += cacheResult.d3CountSmash * multiShadowArray[d_a - 1];
+            countCriticalLight += cacheResult.d3CountCriticalLight * multiShadowArray[d_a - 1];
+            countCriticalClean += cacheResult.d3CountCriticalClean * multiShadowArray[d_a - 1];
+            countCriticalHard += cacheResult.d3CountCriticalHard * multiShadowArray[d_a - 1];
+            countCriticalSmash += cacheResult.d3CountCriticalSmash * multiShadowArray[d_a - 1];
 
             // 次のループに進む
             continue;
@@ -683,10 +771,11 @@
                 if (category === "clean" || category === "hard" || category === "smash") {
                   damageAfterDefense = Math.max(0, damageAfterDefense - passive_hparmor);
                 }
-                sumDamageAfterDefense += damageAfterDefense;
+                // TODO:HP鎧Xと摩耗X追加HPダメージの同時発動時処理はどうなっているか要確認（現状はHP鎧の後に摩耗ダメージ追加）
+                sumDamageAfterDefense += (damageAfterDefense + active_mamou);
               }
               // 防技判定まで経由した平均ダメージ
-              let avgDamageAfterDefense = sumDamageAfterDefense / 100;
+              let avgDamageAfterDefense = sumDamageAfterDefense / Math.pow(100, 1);
               sumDamageForD3 += avgDamageAfterDefense;
             } else {
 
@@ -720,7 +809,8 @@
               // sumDamageForD3 += avgDamageAfterDefense;
 
               // 2025/04/10時点の仕様
-              sumDamageForD3 += (defenseCheckedMainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
+              // TODO:摩耗Xによる追加HPダメージが防技マイナスの影響を受けるかどうか要確認（現状は影響を受ける）
+              sumDamageForD3 += (defenseCheckedMainDamage + subDamage + trueDamage + active_mamou) * (1 + extraMultiplier);
 
             }
 
@@ -733,20 +823,22 @@
           }
 
           // d3ループ分の平均を算出
-          const avgDamageForOuterPair = sumDamageForD3 / 100;
-          totalDamage += avgDamageForOuterPair;
-          countBSChecks += d3CountBSChecks;
-          countBSSuccess += d3CountBSSuccess;
-          countMiss += d3CountMiss;
-          countGraze += d3CountGraze;
-          countLight += d3CountLight;
-          countClean += d3CountClean;
-          countHard += d3CountHard;
-          countSmash += d3CountSmash;
-          countCriticalLight += d3CountCriticalLight;
-          countCriticalClean += d3CountCriticalClean;
-          countCriticalHard += d3CountCriticalHard;
-          countCriticalSmash += d3CountCriticalSmash;
+          const avgDamageForOuterPair = sumDamageForD3 / Math.pow(100, 1);
+          
+          // 多重影X：命中判定ダイスの出目パターン100^(1+X)通りの内指定出目の出現回数だけ乗算
+          totalDamage += avgDamageForOuterPair * multiShadowArray[d_a - 1];
+          countBSChecks += d3CountBSChecks * multiShadowArray[d_a - 1];
+          countBSSuccess += d3CountBSSuccess * multiShadowArray[d_a - 1];
+          countMiss += d3CountMiss * multiShadowArray[d_a - 1];
+          countGraze += d3CountGraze * multiShadowArray[d_a - 1];
+          countLight += d3CountLight * multiShadowArray[d_a - 1];
+          countClean += d3CountClean * multiShadowArray[d_a - 1];
+          countHard += d3CountHard * multiShadowArray[d_a - 1];
+          countSmash += d3CountSmash * multiShadowArray[d_a - 1];
+          countCriticalLight += d3CountCriticalLight * multiShadowArray[d_a - 1];
+          countCriticalClean += d3CountCriticalClean * multiShadowArray[d_a - 1];
+          countCriticalHard += d3CountCriticalHard * multiShadowArray[d_a - 1];
+          countCriticalSmash += d3CountCriticalSmash * multiShadowArray[d_a - 1];
           
           damageCache.set(cacheKey, {
             avgDamageForOuterPair,
@@ -766,8 +858,8 @@
         }
       }
 
-      // 総試行数は、外側の (d_a, d_d) × d3 = 100^2×100 = 100^3
-      const totalOutcomes = Math.pow(100, 3);
+      // 総試行数は、外側の (d_a, d_d) × d3 = 100^2×100 = 100^3×(100^多重影)
+      const totalOutcomes = Math.pow(100, 3 + active_tajuuei);
       let pMiss    = (countMiss / totalOutcomes) * 100;
       let pGraze   = (countGraze / totalOutcomes) * 100;
       let pLight   = (countLight / totalOutcomes) * 100;
@@ -777,8 +869,8 @@
       let pCleanOrHigher = pClean + pHard + pSmash;
       let pCriticalCleanOrHigher = ((countCriticalClean + countCriticalHard + countCriticalSmash) / totalOutcomes) * 100;
       let pBSResist = (countBSChecks > 0 ? (countBSSuccess / countBSChecks) * 100 : 0);
-      // 外側ループ（d_a,d_d）の各組み合わせごとに d3 の平均を取っているので、全体の平均は d_a×d_d=100×100で割る
-      const expectedDamage = totalDamage / (100 * 100);
+      // 外側ループ（d_a,d_d）の各組み合わせごとに d3 の平均を取っているので、全体の平均は d_a×d_d=100×100×(100^多重影)で割る
+      const expectedDamage = totalDamage / Math.pow(100, 2 + active_tajuuei);
 
       document.getElementById(groupId + "_result").innerHTML =
         "ダメージ期待値: " + expectedDamage.toFixed(2) + "<br>" +
@@ -790,7 +882,7 @@
         "スマッシュヒット率: " + pSmash.toFixed(2) + "%<br>" +
         "クリーンヒット以上発生率: " + pCleanOrHigher.toFixed(2) + "%</br>" +
         "クリティカルかつクリーンヒット以上発生率: " + pCriticalCleanOrHigher.toFixed(2) + "%</br>" +
-        "BS抵抗率: " + pBSResist.toFixed(2) + "%";
+        "その攻撃でBSにならない確率: " + pBSResist.toFixed(2) + "%";
 
       // グラフ描画
       drawHitRateChart(groupId, pMiss, pGraze, pLight, pClean, pHard, pSmash);
@@ -801,6 +893,8 @@
       document.getElementById(`${groupId}_active_ct_val`).textContent = document.getElementById(`${groupId}_active_ct`).value;
       document.getElementById(`${groupId}_active_fb_val`).textContent = document.getElementById(`${groupId}_active_fb`).value;
       document.getElementById(`${groupId}_active_kenjitsu_val`).textContent = document.getElementById(`${groupId}_active_kenjitsu`).value;
+      document.getElementById(`${groupId}_active_mamou_val`).textContent = document.getElementById(`${groupId}_active_mamou`).value;
+      document.getElementById(`${groupId}_active_tajuuei_val`).textContent = document.getElementById(`${groupId}_active_tajuuei`).value;
       document.getElementById(`${groupId}_passive_hp_val`).textContent = document.getElementById(`${groupId}_passive_hp`).value;
       document.getElementById(`${groupId}_passive_avoid_val`).textContent = document.getElementById(`${groupId}_passive_avoid`).value;
       document.getElementById(`${groupId}_passive_defense_val`).textContent = document.getElementById(`${groupId}_passive_defense`).value;
@@ -826,7 +920,7 @@
         // 命中判定のダイスがFB値以下なら自動失敗
         // この時は回避判定、命中度判定の1d100×1d100の10000通りのループ（d2ループ×d3ループ）をすべて完全回避した扱いでカウント
         if (d_a <= active.fb) {
-          countMiss += 10000; // 内側ループ d2×d3
+          countMiss += Math.pow(100, 2); // 内側ループ d2×d3
           continue;
         }
         const attackerRoll = active.hit + d_a;
@@ -843,10 +937,10 @@
           else if (attackerCritical) { hit = true; isCritical = true; }
           else if (defenderFumble) { hit = true; }
           else { hit = (attackerRoll > defenderRoll); }
-          if (!hit) { countMiss += 100; continue; }
+          if (!hit) { countMiss += Math.pow(100, 1); continue; }
 
           // 命中度差、堅実値、クリティカルヒット、防技の値をキーにd3ループ以内の判定結果をキャッシュから取得する
-          const cacheKey = `${attackerRoll - defenderRoll}_${active.kenjitsu}_${isCritical}_${passiveFull.defense}`;
+          const cacheKey = `${attackerRoll - defenderRoll}_${active.kenjitsu}_${active.mamou}_${active.tajuuei}_${isCritical}_${passiveFull.defense}`;
           const cacheResult = getDamageFromCache(damageCache, cacheKey);
           if (cacheResult !== null) {
             // cacheResultに格納されたavgDamageForOuterPairを使用する
@@ -918,10 +1012,11 @@
                 if (category === "clean" || category === "hard" || category === "smash") {
                   damageAfterDefense = Math.max(0, damageAfterDefense - passiveFull.hparmor);
                 }
-                sumDamageAfterDefense += damageAfterDefense;
+                // TODO:HP鎧Xと摩耗X追加HPダメージの同時発動時処理はどうなっているか要確認（現状はHP鎧の後に摩耗ダメージ追加）
+                sumDamageAfterDefense += (damageAfterDefense + active.mamou);
               }
               // 防技判定まで経由した平均ダメージ
-              let avgDamageAfterDefense = sumDamageAfterDefense / 100;
+              let avgDamageAfterDefense = sumDamageAfterDefense / Math.pow(100, 1);
               sumDamageForD3 += avgDamageAfterDefense;
             } else {
 
@@ -951,15 +1046,16 @@
               //   sumDamageAfterDefense += damageAfterDefenseCheck;
               // }
               // // 防技判定まで経由した平均ダメージ
-              // let avgDamageAfterDefense = sumDamageAfterDefense / 100;
+              // let avgDamageAfterDefense = sumDamageAfterDefense / Math.pow(100, 1);
               // sumDamageForD3 += avgDamageAfterDefense;
               
               // 2025/04/10時点の仕様
-              sumDamageForD3 += (defenseCheckedMainDamage + subDamage + trueDamage) * (1 + extraMultiplier);
+              // TODO:摩耗Xによる追加HPダメージが防技マイナスの影響を受けるかどうか要確認（現状は影響を受ける）
+              sumDamageForD3 += (defenseCheckedMainDamage + subDamage + trueDamage + active.mamou) * (1 + extraMultiplier);
             }
           }
           // 命中度判定まで経由した平均ダメージ
-          const avgDamageForOuterPair = sumDamageForD3 / 100;
+          const avgDamageForOuterPair = sumDamageForD3 / Math.pow(100, 1);
           totalDamage += avgDamageForOuterPair;
           damageCache.set(cacheKey, {avgDamageForOuterPair});
         }
@@ -990,7 +1086,9 @@
         hit:  parseFloat(document.getElementById("group1_active_hit").value),
         ct:   parseFloat(document.getElementById("group1_active_ct").value),
         fb:   parseFloat(document.getElementById("group1_active_fb").value),
-        kenjitsu: parseFloat(document.getElementById("group1_active_kenjitsu").value)
+        kenjitsu: parseFloat(document.getElementById("group1_active_kenjitsu").value),
+        mamou: parseFloat(document.getElementById("group1_active_mamou").value),
+        tajuuei: parseFloat(document.getElementById("group1_active_tajuuei").value)
       };
     }
 
@@ -1084,7 +1182,9 @@
               hit:  currentCandidate.hit  + delta[2],
               ct:   currentCandidate.ct,
               fb:   currentCandidate.fb,
-              kenjitsu:   currentCandidate.kenjitsu
+              kenjitsu:   currentCandidate.kenjitsu,
+              mamou:   currentCandidate.mamou,
+              tajuuei:   currentCandidate.tajuuei
             };
             const key = JSON.stringify(candidate);
             // すでに評価済みならスキップ
@@ -1131,7 +1231,9 @@
               hit:  currentCandidate.hit  + delta[2],
               ct:   currentCandidate.ct   + delta[3],
               fb:   currentCandidate.fb   + delta[4],
-              kenjitsu:   currentCandidate.kenjitsu
+              kenjitsu:   currentCandidate.kenjitsu,
+              mamou:   currentCandidate.mamou,
+              tajuuei:   currentCandidate.tajuuei
             };
             const key = JSON.stringify(candidate);
             // すでに評価済みならスキップ
@@ -1192,6 +1294,8 @@
         document.getElementById("group2_active_ct").value = document.getElementById("group1_active_ct").value;
         document.getElementById("group2_active_fb").value = document.getElementById("group1_active_fb").value;
         document.getElementById("group2_active_kenjitsu").value = document.getElementById("group1_active_kenjitsu").value;
+        document.getElementById("group2_active_mamou").value = document.getElementById("group1_active_mamou").value;
+        document.getElementById("group2_active_tajuuei").value = document.getElementById("group1_active_tajuuei").value;
 
         // 表示用のspanを手動で更新（updateValueは使わない）
         document.getElementById("group2_active_main_val").textContent = document.getElementById("group1_active_main").value;
@@ -1200,6 +1304,8 @@
         document.getElementById("group2_active_ct_val").textContent = document.getElementById("group1_active_ct").value;
         document.getElementById("group2_active_fb_val").textContent = document.getElementById("group1_active_fb").value;
         document.getElementById("group2_active_kenjitsu_val").textContent = document.getElementById("group1_active_kenjitsu").value;
+        document.getElementById("group2_active_mamou_val").textContent = document.getElementById("group1_active_mamou").value;
+        document.getElementById("group2_active_tajuuei_val").textContent = document.getElementById("group1_active_tajuuei").value;
 
         calculateGroup("group2");
       }
@@ -1370,6 +1476,8 @@
       document.getElementById(groupId + "_active_ct").value = candidate.ct;
       document.getElementById(groupId + "_active_fb").value = candidate.fb;
       document.getElementById(groupId + "_active_kenjitsu").value = candidate.kenjitsu;
+      document.getElementById(groupId + "_active_mamou").value = candidate.mamou;
+      document.getElementById(groupId + "_active_tajuuei").value = candidate.tajuuei;
 
       // 表示用のspanを手動で更新（updateValueは使わない）
       document.getElementById(groupId + "_active_main_val").textContent = candidate.main;
@@ -1378,6 +1486,8 @@
       document.getElementById(groupId + "_active_ct_val").textContent = candidate.ct;
       document.getElementById(groupId + "_active_fb_val").textContent = candidate.fb;
       document.getElementById(groupId + "_active_kenjitsu_val").textContent = candidate.kenjitsu;
+      document.getElementById(groupId + "_active_mamou_val").textContent = candidate.mamou;
+      document.getElementById(groupId + "_active_tajuuei_val").textContent = candidate.tajuuei;
 
       // 計算は最後に1回だけ
       calculateGroup(groupId);
@@ -1416,7 +1526,9 @@
               hit: parseFloat(document.getElementById(groupId + "_active_hit").value),
               ct: parseFloat(document.getElementById(groupId + "_active_ct").value),
               fb: parseFloat(document.getElementById(groupId + "_active_fb").value),
-              kenjitsu: parseFloat(document.getElementById(groupId + "_active_kenjitsu").value)
+              kenjitsu: parseFloat(document.getElementById(groupId + "_active_kenjitsu").value),
+              mamou: parseFloat(document.getElementById(groupId + "_active_mamou").value),
+              tajuuei: parseFloat(document.getElementById(groupId + "_active_tajuuei").value)
           },
           passive: {
               hp: parseFloat(document.getElementById(groupId + "_passive_hp").value),
@@ -1481,6 +1593,8 @@
           groupId + "_active_ct",
           groupId + "_active_fb",
           groupId + "_active_kenjitsu",
+          groupId + "_active_mamou",
+          groupId + "_active_tajuuei",
           groupId + "_passive_hp",
           groupId + "_passive_avoid",
           groupId + "_passive_defense",
@@ -1570,6 +1684,8 @@
         document.getElementById(`${group}_active_ct_${suffix}`).addEventListener('input', () => changeSlider(`active_ct`, group));
         document.getElementById(`${group}_active_fb_${suffix}`).addEventListener('input', () => changeSlider(`active_fb`, group));
         document.getElementById(`${group}_active_kenjitsu_${suffix}`).addEventListener('input', () => changeSlider(`active_kenjitsu`, group));
+        document.getElementById(`${group}_active_mamou_${suffix}`).addEventListener('input', () => changeSlider(`active_mamou`, group));
+        document.getElementById(`${group}_active_tajuuei_${suffix}`).addEventListener('input', () => changeSlider(`active_tajuuei`, group));
         document.getElementById(`${group}_passive_hp_${suffix}`).addEventListener('input', () => changeSlider(`passive_hp`, group));
         document.getElementById(`${group}_passive_avoid_${suffix}`).addEventListener('input', () => changeSlider(`passive_avoid`, group));
         document.getElementById(`${group}_passive_defense_${suffix}`).addEventListener('input', () => changeSlider(`passive_defense`, group));
