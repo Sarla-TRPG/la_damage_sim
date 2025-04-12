@@ -86,6 +86,11 @@
         <input type="checkbox" id="enableBSResistance" checked>
         BS抵抗判定を有効にする
       </label>
+      &nbsp;&nbsp;
+      <label>
+        <input type="checkbox" id="guaranteeHit">
+        必中
+      </label>
     </div>
     <!-- 「能動側最適化」ボタンを追加 -->
     <div class="optimize-buttons">
@@ -712,6 +717,9 @@
             isCritical = true;
           } else if (defenderFumble) {
             hit = true;
+          } else if (document.getElementById("guaranteeHit").checked) {
+            // 必中により命中
+            hit = true;
           } else {
             hit = (attackerRoll > defenderRoll);
           }
@@ -759,7 +767,12 @@
             if (correctedDie > 100) { correctedDie = 100; }
             
             const hitDegreeDie = d3; // 元のダイス値は命中度補正前の判定用に残す
-            const hitDegreeBonus = attackerRoll - defenderRoll;
+            let hitDegreeBonus = attackerRoll - defenderRoll;
+            if (document.getElementById("guaranteeHit").checked) {
+              // 必中処理
+              // 命中補正は25として扱い、ヒットレート判定を行う
+              hitDegreeBonus = 25;
+            }
             let finalHitDegree = hitDegreeBonus + hitDegreeDie;
             
             // 命中度決定1：命中度が100以上なら巧妙の補正を適用（最低50に補正）
@@ -769,6 +782,7 @@
                 finalHitDegree = 50;
               }
             }
+
             // クリティカル時の最低値補正
             if (isCritical && finalHitDegree < 50) {
               finalHitDegree = 50;
@@ -1005,6 +1019,7 @@
           else if (!defenderFumble && defenderCritical) { hit = false; }
           else if (attackerCritical) { hit = true; isCritical = true; }
           else if (defenderFumble) { hit = true; }
+          else if (document.getElementById("guaranteeHit").checked) { hit = true; } // 必中により命中
           else { hit = (attackerRoll > defenderRoll); }
           if (!hit) { countMiss += Math.pow(100, 1); continue; }
 
@@ -1024,7 +1039,12 @@
             let correctedDie = d3 + active.kenjitsu;
             if (correctedDie > 100) { correctedDie = 100; }
             const hitDegreeDie = d3;
-            const hitDegreeBonus = attackerRoll - defenderRoll;
+            let hitDegreeBonus = attackerRoll - defenderRoll;
+            if (document.getElementById("guaranteeHit").checked) {
+              // 必中処理
+              // 命中補正は25として扱い、ヒットレート判定を行う
+              hitDegreeBonus = 25;
+            }
             let finalHitDegree = hitDegreeBonus + hitDegreeDie;
             if (finalHitDegree >= 100) {
               finalHitDegree = finalHitDegree - passiveFull.koumyou;
@@ -1687,6 +1707,11 @@
         });
       });
       document.getElementById("enableBSResistance").addEventListener("change", function() {
+        ["group1", "group2"].forEach(function(groupId) {
+          calculateGroup(groupId);
+        });
+      });
+      document.getElementById("guaranteeHit").addEventListener("change", function() {
         ["group1", "group2"].forEach(function(groupId) {
           calculateGroup(groupId);
         });
