@@ -968,7 +968,7 @@
         "その攻撃でBSにならない確率: " + pBSResist.toFixed(2) + "%";
 
       // グラフ描画
-      drawHitRateChart(groupId, pMiss, pGraze, pLight, pClean, pHard, pSmash);
+      drawHitRateChart(groupId, pMiss, pGraze, pLight, pClean, pHard, pSmash, (countCriticalClean / totalOutcomes) * 100, (countCriticalHard / totalOutcomes) * 100, (countCriticalSmash / totalOutcomes) * 100);
 
       document.getElementById(`${groupId}_active_main_val`).textContent = document.getElementById(`${groupId}_active_main`).value;
       document.getElementById(`${groupId}_active_sub_val`).textContent = document.getElementById(`${groupId}_active_sub`).value;
@@ -1810,12 +1810,12 @@
     // グローバルにインスタンスをグループ別に保存するオブジェクトを作る
     window.hitRateChartInstances = window.hitRateChartInstances || {};
 
-    function drawHitRateChart(group, pMiss, pGraze, pLight, pClean, pHard, pSmash) {
+    function drawHitRateChart(group, pMiss, pGraze, pLight, pClean, pHard, pSmash, pCTClean, pCTHard, pCTSmash) {
         const data = {
-            labels: ["回避", "グレイズ", "ライト", "クリーン", "ハード", "スマッシュ"],
+            labels: ["回避", "グレイズ", "ライト", "クリーン", "CTクリーン", "ハード", "CTハード", "スマッシュ", "CTスマッシュ"],
             datasets: [{
                 label: "内訳",
-                data: [pMiss, pGraze, pLight, pClean, pHard, pSmash],
+                data: [pMiss, pGraze, pLight, pClean-pCTClean, pCTClean, pHard-pCTHard, pCTHard, pSmash-pCTSmash, pCTSmash],
                 // backgroundColor: "rgba(135, 206, 250, 0.6)", // 視認性アップ
                 borderWidth: 1,
                 categoryPercentage: 0.8, // 各カテゴリの領域に占める割合
